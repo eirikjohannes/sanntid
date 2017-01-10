@@ -8,27 +8,43 @@ Excercise 1
 
 3 
 What is concurrency? What is parallelism? What's the difference?
+Concurrency er å tillate systemer å kjøre i uavhengig rekkefølge, slik at den ene oppgaven kan kjøre før den andre eller visa-versa med identisk resultat.
+Parallelism er å kjøre f.eks. to oppgaver parallelt på en flerkjernet prosessor. 
+Forskjellen er at concurrency kan være tilstede uten parallelism (f.eks. en enkjernet prosessor hvor to oppgaver deler ressursen), mens parallelisme ikke nødvendigvis trenger å inneha concurrency. 
+Hvis parallelisme deler en ressurs må det være regler for hvordan de skal aksessere ressursen (minneadresse f.eks.) slik at man opprettholder concurrency.
 
 
 Why have machines become increasingly multicore in the past decade?
+To handle larger tasks and be able to break down more complex tasks into several parallell tasks that can be solved separately and then combined after computing.
 
 
 What kinds of problems motivates the need for concurrent execution? (Or phrased differently: What problems do concurrency help in solving?)
-
+Tasks wich share r/w memory, tasks where one have to finnish before the other, e.g.
 
 Does creating concurrent programs make the programmer's life easier? Harder? Maybe both? (Come back to this after you have worked on part 4 of this exercise)
+Creating concurrent programs may introduce several unexpected bugs that makes the life of the programmer harder, but may also make it easier when the concurrent programs works as expected as it uncovers alot of features.
 
 
 What are the differences between processes, threads, green threads, and coroutines?
+A process is the overall instance of a program which is excecuted. It may contain several threads.
+Threads are (often multiple in parallel) instructions that are excecuted "lightweight processes".
+Green threads simulates multithread environments that doesn't rely on OS capabilities. Starting up a green thread does not engage a new kernel and is therefore "cheaper" to start and fast.
+
+
 
 
 Which one of these do pthread_create() (C/POSIX), threading.Thread() (Python), go (Go) create?
+Weird question, but a thread with different arguments.
 
+go (GO) creates a concurrent excecution of a function.
 
 How does pythons Global Interpreter Lock (GIL) influence the way a python Thread behaves?
+Since pythons memory management is not thread safe, it needs a lock to prevent several threads from excecuting the same bytecodes at once.
 
 
 With this in mind: What is the workaround for the GIL (Hint: it's another module)?
+Multiprocessing side-steps the GIL.
 
 
 What does func GOMAXPROCS(n int) int change?
+It changes the number of OS threads that can run GO-code simoultanously.

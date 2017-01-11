@@ -2,7 +2,10 @@
 
 Excercise 1
 
-1 N/A
+1 	Polle heiser
+	Polle tråder
+	Ack for melding / resend
+	Timeout for å motvirke hengende tråder/heiser
 
 2 N/A
 
@@ -48,3 +51,12 @@ Multiprocessing side-steps the GIL.
 
 What does func GOMAXPROCS(n int) int change?
 It changes the number of OS threads that can run GO-code simoultanously.
+
+
+
+4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+In C: you get random numbers because threads. Unavaliable memory accesed by another thread?
+
+In python: same result.
+
+go did the same, that fucker

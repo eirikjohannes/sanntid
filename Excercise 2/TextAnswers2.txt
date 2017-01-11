@@ -1,0 +1,11 @@
+An atomic operation appears to occur instantaneously by the rest of the system. Atomicity is guaranteed to be isolated from concurrent processes, whatever this means (Not concurrent, but instantaneous?)
+Succeed or fail definition - either changes something or not.
+This is nice because it reads and writes to a location without the posibility of other STUFF to access the same location during the operation.
+
+A semaphore is a flag used to grant or prevent access to a location
+
+Mutex er et mellomledd som styrer kommunikasjonen mellom ressurssen og trådene
+Formålet er at kun en tråd kan r/w ressursen om gangen.
+
+Critical section er et sted hvor flere tråder ønsker å aksesere det samme området, her bør man løse en eventuell konflikt. F.eks. med en mutex
+

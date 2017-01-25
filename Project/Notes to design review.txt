@@ -1,0 +1,23 @@
+Notes to design review
+
+Robustness/failsafe:
+- Lagre ordre i ekstern filkø
+- Hva skjer med unforeseen events (avsluttede tråder, strømbrudd, nettverksbrudd/krasj)
+- 
+
+Networktopology
+
+
+Module responsobilities
+Netverksmodul prober nettverket og distribuerer etter behov
+IO modul Jobber mot hardware med knappetrykk/leds etc.
+state-machine
+
+Kø system: 
+Alle heisene regner ut den "beste heisen" for å løse ordren. ALle ordre på nettverket blir lagt til i alle køene, markert med hvilken heis som utfører ordren. Dersom en heis forsvinner fra nettverket vil man regne ut på nytt og finne ut hvilken heis som tar de gjenværende ordrene. Alle heiser assigner en ordreID. OrdreID: HeisNR, etasje, retning, intern/ekstern
+
+Other design issues:
+Alle er like og alle er "master" - alle må ha samme informasjon selvom ingen sørger for å fordele den. 
+
+
+Weaknessesessssss

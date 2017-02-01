@@ -19,17 +19,18 @@ type HelloMsg struct {
 }
 
 type BtnType int
+
 const (
-//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-	up BtnType =1
-	inside BtnType =0	
-	down BtnType =-1
+	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
+	up     BtnType = 1
+	inside BtnType = 0
+	down   BtnType = -1
 )
-	
+
 type NewOrder struct {
 	Floor int //1 to n
-	Btn BtnType 
-	Id int
+	Btn   BtnType
+	Id    int
 }
 
 func main() {
@@ -57,8 +58,8 @@ func main() {
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(15647, id, peerTxEnable)
-	go peers.Receiver(15647, peerUpdateCh)
+	go peers.Transmitter(13132, id, peerTxEnable)
+	go peers.Receiver(13132, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
 	helloTx := make(chan HelloMsg)
@@ -68,10 +69,10 @@ func main() {
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, helloTx)
-	go bcast.Transmitter(16569, orderTx)
-	go bcast.Receiver(16569, helloRx)
-	go bcast.Receiver(16569, orderRx)
+	go bcast.Transmitter(13131, helloTx)
+	go bcast.Transmitter(13131, orderTx)
+	go bcast.Receiver(13131, helloRx)
+	go bcast.Receiver(13131, orderRx)
 
 	// The example message. We just send one of these every second.
 	go func() {
@@ -82,21 +83,21 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
-	
+
 	go func() {
-		order := NewOrder{3,1, os.Getpid()}
+		order := NewOrder{3, 1, os.Getpid()}
 		for {
 			order.Floor++
-			if (order.Floor>4){
-				order.Floor=1			
+			if order.Floor > 4 {
+				order.Floor = 1
 			}
 			//fmt.Println("Floor is: %d", order.Floor)
 			order.Btn--
-			if (order.Btn< -1){
-				order.Btn=1
+			if order.Btn < -1 {
+				order.Btn = 1
 			}
-			orderTx<-order
-			time.Sleep(2*time.Second)
+			orderTx <- order
+			time.Sleep(2 * time.Second)
 		}
 	}()
 	fmt.Println("Started")

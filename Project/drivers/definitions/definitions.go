@@ -41,3 +41,9 @@ type ElevatorAliveMessage struct {
 	LastFloor  int
 	ElevatorId string
 }
+
+type LightUpdate struct {
+	Floor    int
+	Button   int
+	UpdateTo bool
+}

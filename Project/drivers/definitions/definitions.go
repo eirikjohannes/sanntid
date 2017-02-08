@@ -12,32 +12,28 @@ const ElevatorTimeoutDuration = 5 * time.Second
 const AliveMessageInterval = 500 * time.Millisecond
 const UDPPort = 13131
 
-type BtnType int
-
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-	up     BtnType = 1
-	inside BtnType = 0
-	down   BtnType = -1
+	up     int = 1
+	inside int = 0
+	down   int = -1
 )
 
-type DirType int
-
 const (
-	up   DirType = 1
-	idle DirType = 0
-	down DirType = -1
+	//	up   DirType = 1
+	idle int = 0
+	//	down DirType = -1
 )
 
 type ElevatorOrder struct {
 	Floor      int //1 to NumFloors
-	Btn        BtnType
+	Btn        int
 	ElevatorId string
 	Ack        bool
 }
 
 type ElevatorAliveMessage struct {
-	Direction  DirType
+	Direction  int
 	LastFloor  int
 	ElevatorId string
 }

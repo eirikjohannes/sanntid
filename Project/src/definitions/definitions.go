@@ -7,37 +7,36 @@ package definitions
 import "time"
 
 const NumFloors = 4
+const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
 const ElevatorTimeoutDuration = 5 * time.Second
 const AliveMessageInterval = 500 * time.Millisecond
 const UDPPort = 13131
 
-type BtnType int
 
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-	up     BtnType = 1
-	inside BtnType = 0
-	down   BtnType = -1
+    BtnUp       int = 0
+	BtnDown     int = 1
+	BtnInside   int = 2
 )
 
-type DirType int
 
 const (
-	up   DirType = 1
-	idle DirType = 0
-	down DirType = -1
+	DirUp   int = 1
+	DirIdle int = 0
+	DirDown int = -1
 )
 
 type ElevatorOrder struct {
 	Floor      int //1 to NumFloors
-	Btn        BtnType
+	Btn        int
 	ElevatorId string
 	Ack        bool
 }
 
 type ElevatorAliveMessage struct {
-	Direction  DirType
+	Direction  int
 	LastFloor  int
 	ElevatorId string
 }

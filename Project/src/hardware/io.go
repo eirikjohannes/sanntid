@@ -2,6 +2,7 @@ package hardware
 
 /*
 #cgo LDFLAGS: -lcomedi -lm
+#cgo CFLAGS: -std=c99
 #include "io.h"
 */
 import "C"

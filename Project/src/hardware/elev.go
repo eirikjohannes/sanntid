@@ -2,12 +2,13 @@ package hardware
 
 /*
 #cgo LDFLAGS: -lcomedi -lm
+#cgo CFLAGS: -std=c99
 #include "channels.h"
 */
 import "C"
 import (
 	def "definitions"
-	"log"
+//	"log"
 )
 
 var lampChannelMatrix = [def.NumFloors][def.NumButtons]int{
@@ -33,23 +34,23 @@ func Init() int {
 	SetDoorLamp(false)
 	for f := 0; f < def.NumFloors; f++ {
 		if f != 0 {
-			SetBtnLamp(def.LightUpdate{Floor: f, Button: def.down, UpdateTo: false})
+			SetBtnLamp(def.LightUpdate{Floor: f, Button: def.BtnDown, UpdateTo: false})
 		}
 		if f != def.NumFloors-1 {
-			SetBtnLamp(def.LightUpdate{Floor: f, Button: def.up, UpdateTo: false})
+			SetBtnLamp(def.LightUpdate{Floor: f, Button: def.BtnUp, UpdateTo: false})
 		}
-		SetBtnLamp(def.LightUpdate{Floor: f, Button: def.inside, UpdateTo: false})
+		SetBtnLamp(def.LightUpdate{Floor: f, Button: def.BtnInside, UpdateTo: false})
 	}
 	// Turn off stoplamp
 	ioClearBit(C.LIGHT_STOP)
 
 	// Move to defined state
-	SetMotorDir(def.down)
+	SetMotorDir(def.DirDown)
 	floor := GetFloor()
 	for floor == -1 {
 		floor = GetFloor()
 	}
-	SetMotorDir(def.idle)
+	SetMotorDir(def.DirIdle)
 	SetFloorLamp(floor)
 
 	//log.Println(def.ColG, "Hardware initialized.", def.ColN)

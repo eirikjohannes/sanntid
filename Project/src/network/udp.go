@@ -1,24 +1,23 @@
 package network
 
 import (
-	"./bcast"
-	"./localip"
-	"./peers"
+	"network/bcast"
+	"network/localip"
+	"network/peers"
 	def "definitions"
-	"flag"
+	//"flag"
 	"fmt"
 	"os"
-	"time"
+	//"time"
 )
 
 var LocalElevatorId string
 var MapOfAckedOrders map[def.ElevatorOrder]int
 var ListOfPeers[]string
 
-func InitUDP()
-{
-	MapOfAckedOrders = make(map[def.ElevatorOrder]int)
 
+func InitUDP(NetworkToQueueOrderChannel chan def.ElevatorOrder, QueueToNetworkOrderChannel chan def.ElevatorOrder, NetworkToQueueAliveChannel chan def.ElevatorAliveMessage, QueueToNetworkAliveChannel chan def.ElevatorAliveMessage){
+	MapOfAckedOrders = make(map[def.ElevatorOrder]int)
 	//var elevatorId string
 	localIP, err := localip.LocalIP()
 	if err != nil {
@@ -29,22 +28,24 @@ func InitUDP()
 
 	ElevatorPeerUpdateChannel := make(chan peers.PeerUpdate)
 
-	go peers.Transmitter(def.UDPPort, LocalElevatorId, True)
-	go peers.Reciever(def.UDPPort, ElevatorPeerUpdateChannel)
-
-
+	peerTxEnable :=make(chan bool)
+	go peers.Transmitter(def.UDPPort, LocalElevatorId, peerTxEnable);
+	go peers.Cheesedoodles(def.UDPPort, ElevatorPeerUpdateChannel);
 
 	orderTx := make(chan def.ElevatorOrder)
 	orderRx := make(chan def.ElevatorOrder)
 	aliveTx := make(chan def.ElevatorAliveMessage)
 	aliveRx := make(chan def.ElevatorAliveMessage)
+	
+	go bcast.Transmitter2(def.UDPPort, orderRx) 
+	go bcast.Transmitter2(def.UDPPort, aliveRx)
+	go bcast.Transmitter(def.UDPPort, orderTx)
+	go bcast.Transmitter(def.UDPPort, aliveTx)
 
-	go bcast.Transmitter(def.UDPPort, orderTx, aliveTx)
-	go bcast.Reciever(def. UDPPort, orderRx, aliveRx)
 	
 	//Decide which queues should transport the orders. Probably a channel that will communicate with the other threads. This should communicate with queue only....?
-	go addOrderToQueue()
-	go distributeOrderToNetwork()
+	go addOrderToQueue(orderTx,orderRx, QueueToNetworkOrderChannel, NetworkToQueueOrderChannel)
+	go distributeOrderToNetwork(orderTx, QueueToNetworkOrderChannel)
 	
 }
 
@@ -59,41 +60,46 @@ QueueToNetworkAliveChannel := make(chan def.ElevatorAliveMessage,10)
 
 */
 
-//Add order to queue tar imot fra nettverket og formidler til queue. Når queue bekrefter, returneres en positiv verdi som fungerer som en ack. Deretter sender nettverksmodulen ut ACK.
-func addOrderToQueue(){
+//Add order to queue tar imot fra nettverket og formidler til queue. 
+//Når queue bekrefter, returneres en positiv verdi som fungerer som en ack. Deretter sender nettverksmodulen ut ACK.
+func addOrderToQueue(orderTx chan def.ElevatorOrder, orderRx chan def.ElevatorOrder, QueueToNetworkOrderChannel chan def.ElevatorOrder, NetworkToQueueOrderChannel chan def.ElevatorOrder){
 	//def.ElevatorOrder order
 	for{
 		order := <- orderRx
-		select{
-			case !order.Ack			
-				NetworkToQueueOrderChannel<-order
-				addedOrder:=<-QueueToNetworkOrderChannel 
-				for addedOrder.Ack!=True{ //or orderID order.)
-					addedOrder :=<-QueueToNetworkOrderChannel
-				}
-				//We now have sucessfully added the order to the queue. Send ack onto network.
-				orderTx<-addedOrder
-			case order.Ack
-				//Order is acked from another source
-				//If the order was sent from this elevator, append ACK to list.
-				if (order.ElevatorID == LocalElevatorId){
-					orderAlreadyInMap:=addAck(&order)
-					// if (orderAlreadyInMap){
-					// 	orderTx<-order //resend to network
-					// 	order.Ack=0
-					// 	NetworkToQueueOrderChannel<-order //resends order to queue to add order again.
-					// }
-				}
-		}//Hvis det kommer en ny ting i orderRx, send til kanalen som kommuniserer mellom kø og netwrok. vent på ack fra queue og send deretter ACK på nettverket.
-	}
+		if(!order.Ack){
+			fmt.Println("\nFrom addordertoquque: \n The order has not been acked. New order, send to queue.\n")			
+			NetworkToQueueOrderChannel<-order
+			addedOrder:=<-QueueToNetworkOrderChannel 
+			fmt.Println("Order returned to network\n")
+			for (addedOrder.Ack!=true){ //or orderID order.)
+				addedOrder = <-QueueToNetworkOrderChannel
+			}
+			fmt.Println("Order is acked, transmitting w/ack to ontonetwork\n")
+			//Possible deadlock of addORderToQUeue
+			//We now have sucessfully added the order to the queue. Send order with ack onto network.
+			orderTx<-addedOrder
+		}else if (order.Ack){
+			//Order is acked from another source
+			//If the order was sent from this elevator, append ACK to list.
+			if (order.ElevatorId == LocalElevatorId){
+				addAck(&order)
+				fmt.Println("\n from addOrderToQueue:\n order.ACk=1, order is originally sent to this computer.\n\n")
+				// if (orderAlreadyInMap){
+				// 	orderTx<-order //resend to network
+				// 	order.Ack=0
+				// 	NetworkToQueueOrderChannel<-order //resends order to queue to add order again.
+				// }
+			}
+		}
+	}//Hvis det kommer en ny ting i orderRx, send til kanalen som kommuniserer mellom kø og netwrok. vent på ack fra queue og send deretter ACK på nettverket.
 }
 
-func distributeOrderToNetwork(ElevatorOrder order){
+func distributeOrderToNetwork(orderTx chan def.ElevatorOrder,QueueToNetworkOrderChannel chan def.ElevatorOrder){
 	//Hvis ny ordre ligger i kanalen, ta imot og legg i orderTx kanalen. 
 	for{
 		
 		orderToDistribute := <-QueueToNetworkOrderChannel
-		switch i:=addAck(orderToDistribute); i {
+		switch i:=addAck(&orderToDistribute); i {
 			case 1:
 				fmt.Println("Order was distributed, but already in mapOfAckedOrders. ElevatorID: "+orderToDistribute.ElevatorId)
 			case 0:
@@ -107,32 +113,31 @@ func distributeOrderToNetwork(ElevatorOrder order){
 func addAck(orderToCheck *def.ElevatorOrder) int{
 	var orderExists bool=false
 	var tempValue int =0
-	tempValue, orderExists:=MapOfAckedOrders[*orderToCheck]
-
+	tempValue, orderExists = MapOfAckedOrders[*orderToCheck]
 
 	//printmap
 	fmt.Println("Before if(OrderExists)\n")
 	for key, value := range MapOfAckedOrders{
-		fmt.Println("Key:",key, "NumberofAcks: %i\n", value)
+		fmt.Println("Key: %d \t NumberofAcks: %d \n",key, value)
 	}
 
 	if (orderExists){
-		if (tempValue+1==len(peers.GetNumberOfPeers)){
+		fmt.Println("\nNumber of peers: %d", peers.GetNumberOfPeers())
+		if ((tempValue+1)==peers.GetNumberOfPeers()){
 			delete (MapOfAckedOrders, *orderToCheck)
-		}
-		else{
+		}else{
 			MapOfAckedOrders[*orderToCheck]=(tempValue+1)
 		}
 		return 1
-	}
-	else{
+	}else{
 		MapOfAckedOrders[*orderToCheck]=0;
 		return 0
 	}
 	fmt.Println("After if(OrderExists)\n")
 	for key, value := range MapOfAckedOrders{
-		fmt.Println("Key:",key, "NumberofAcks: %i\n", value)
+		fmt.Println("Key:",key, "NumberofAcks: %d\n", value)
 	}
-	
-
+	return 0
 }	
+
+

@@ -30,6 +30,7 @@ type ElevatorOrder struct {
 	Btn        int
 	ElevatorId string
 	Ack        bool
+	Excecuted  bool
 }
 
 type ElevatorAliveMessage struct {

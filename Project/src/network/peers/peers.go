@@ -1,9 +1,9 @@
 package peers
 
 import (
-	"network/conn"
 	"fmt"
 	"net"
+	"network/conn"
 	"sort"
 	"time"
 )
@@ -13,22 +13,21 @@ type PeerUpdate struct {
 	New   string
 	Lost  []string
 }
+
 var P PeerUpdate
 
 const interval = 15 * time.Millisecond
 const timeout = 50 * time.Millisecond
 
-func GetNumberOfPeers()(numOfPeers int){
-	numOfPeers=len(P.Peers)
+func GetNumberOfPeers() (numOfPeers int) {
+	numOfPeers = len(P.Peers)
 	return numOfPeers
 }
 
-
-
-func Cheesedoodles(port int, peerUpdateCh chan<- PeerUpdate) {
+func Reciever(port int, peerUpdateCh chan<- PeerUpdate) {
 
 	var buf [1024]byte
-	
+
 	lastSeen := make(map[string]time.Time)
 
 	conn := conn.DialBroadcastUDP(port)

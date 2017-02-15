@@ -1,18 +1,17 @@
 package bcast
 
 import (
-	"network/conn"
 	"encoding/json"
 	"fmt"
 	"net"
+	"network/conn"
 	"reflect"
 	"strings"
 )
 
-
 // Matches type-tagged JSON received on `port` to element types of `chans`, then
 // sends the decoded value on the corresponding channel
-func Transmitter2(port int, chans ...interface{}) {
+func Reciever(port int, chans ...interface{}) { //reciever
 	checkArgs(chans...)
 
 	var buf [1024]byte
@@ -64,6 +63,7 @@ func Transmitter(port int, chans ...interface{}) {
 		conn.WriteTo([]byte(typeNames[chosen]+string(buf)), addr)
 	}
 }
+
 // Checks that args to Tx'er/Rx'er are valid:
 //  All args must be channels
 //  Element types of channels must be encodable with JSON

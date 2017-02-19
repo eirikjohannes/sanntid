@@ -9,34 +9,15 @@ import (
 )
 
 func main() {
-	NetworkToQueueOrderChannel := make(chan def.ElevatorOrder, 10)
-	NetworkToQueueAliveChannel := make(chan def.ElevatorAliveMessage, 10)
-	QueueToNetworkOrderChannel := make(chan def.ElevatorOrder, 10)
-	QueueToNetworkAliveChannel := make(chan def.ElevatorAliveMessage, 10)
-	tick := time.Tick(5000 * time.Millisecond)
-	tick2 := time.Tick(2100 * time.Millisecond)
-	go network.InitUDP(NetworkToQueueOrderChannel, QueueToNetworkOrderChannel, NetworkToQueueAliveChannel, QueueToNetworkAliveChannel)
-
-	var newOrder def.ElevatorOrder
-	newOrder.Floor = 1
-	newOrder.Btn = 1
-	newOrder.ElevatorId = network.GetElevatorId()
-	newOrder.Ack = false
-	var newOrder2 def.ElevatorOrder
-	newOrder2.Floor = 2
-	newOrder2.Btn = 0
-	newOrder2.ElevatorId = network.GetElevatorId()
-	go PrintOrder(NetworkToQueueOrderChannel, QueueToNetworkOrderChannel)
-	for {
-		select {
-		case <-tick:
-			QueueToNetworkOrderChannel <- newOrder
-			QueueToNetworkOrderChannel <- newOrder2
-		case <-tick2:
-			QueueToNetworkOrderChannel <- newOrder2
-		}
-
+	msgCh := def.MessageChan{
+		Outgoing: 		make(chan def.Message, 10),
+		Incoming: 		make(chan def.Message, 10),
+		CostReply: 		make(chan def.Message, 10),
+		NumOnline: 		make(chan def.NumOnline),
 	}
+	
+	go network.InitUDP(msgCh.Incoming,msgCh.Outgoing,msgCh.NumOnline)
+	
 
 }
 

@@ -1,13 +1,39 @@
 package bcast
 
 import (
-	"../conn"
 	"encoding/json"
 	"fmt"
 	"net"
+	"network/conn"
 	"reflect"
 	"strings"
 )
+
+// Matches type-tagged JSON received on `port` to element types of `chans`, then
+// sends the decoded value on the corresponding channel
+func Reciever(port int, chans ...interface{}) { //reciever
+	checkArgs(chans...)
+
+	var buf [1024]byte
+	conn := conn.DialBroadcastUDP(port)
+	for {
+		n, _, _ := conn.ReadFrom(buf[0:])
+		for _, ch := range chans {
+			T := reflect.TypeOf(ch).Elem()
+			typeName := T.String()
+			if strings.HasPrefix(string(buf[0:n])+"{", typeName) {
+				v := reflect.New(T)
+				json.Unmarshal(buf[len(typeName):n], v.Interface())
+
+				reflect.Select([]reflect.SelectCase{{
+					Dir:  reflect.SelectSend,
+					Chan: reflect.ValueOf(ch),
+					Send: reflect.Indirect(v),
+				}})
+			}
+		}
+	}
+}
 
 // Encodes received values from `chans` into type-tagged JSON, then broadcasts
 // it on `port`
@@ -35,32 +61,6 @@ func Transmitter(port int, chans ...interface{}) {
 		chosen, value, _ := reflect.Select(selectCases)
 		buf, _ := json.Marshal(value.Interface())
 		conn.WriteTo([]byte(typeNames[chosen]+string(buf)), addr)
-	}
-}
-
-// Matches type-tagged JSON received on `port` to element types of `chans`, then
-// sends the decoded value on the corresponding channel
-func Receiver(port int, chans ...interface{}) {
-	checkArgs(chans...)
-
-	var buf [1024]byte
-	conn := conn.DialBroadcastUDP(port)
-	for {
-		n, _, _ := conn.ReadFrom(buf[0:])
-		for _, ch := range chans {
-			T := reflect.TypeOf(ch).Elem()
-			typeName := T.String()
-			if strings.HasPrefix(string(buf[0:n])+"{", typeName) {
-				v := reflect.New(T)
-				json.Unmarshal(buf[len(typeName):n], v.Interface())
-
-				reflect.Select([]reflect.SelectCase{{
-					Dir:  reflect.SelectSend,
-					Chan: reflect.ValueOf(ch),
-					Send: reflect.Indirect(v),
-				}})
-			}
-		}
 	}
 }
 

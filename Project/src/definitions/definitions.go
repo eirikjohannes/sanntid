@@ -42,8 +42,8 @@ type Message struct{
 
 const {//Category for messages
 	Alive int= iota+1
-	NewRequest
-	CompleteRequest
+	NewOrder
+	CompleteOrder
 	Cost
 }
 
@@ -62,13 +62,13 @@ type PeerUpdate struct {
 	Peers []string
 	New   string
 	Lost  []string
+	NumOnline int
 }
 
 type MessageChan struct {
 	Outgoing 	chan Message
 	Incoming 	chan Message
 	CostReply 	chan Message
-	NumOnline 	chan int
 }
 
 type HardwareChan struct {
@@ -81,7 +81,7 @@ type HardwareChan struct {
 type EventChan struct {
 	FloorReached chan int
 	DoorTimeout  chan bool
-	DeadElevator chan int
+	ElevatorPeerUpdate chan PeerUpdate
 }
 
 // Colors for printing to console

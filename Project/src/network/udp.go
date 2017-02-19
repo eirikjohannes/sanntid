@@ -17,7 +17,7 @@ import (
 
 
 
-func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, NumOnlineCh chan NumOnline) {
+func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, ElevatorPeerUpdateCh chan def.PeerUpdate) {
 	
 	//var elevatorId string
 	localIP, err := localip.LocalIP()
@@ -29,7 +29,7 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, NumOnli
 	def.LocalElevatorId = localIP.String()//fmt.Sprintf(localIP) //fmt.Sprintf("%s-%d", localIP, os.Getpid())
 
 	//Initialize peerServer that handles alive and lost elevators
-	ElevatorPeerUpdateCh := make(chan peers.PeerUpdate)
+	
 
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(def.UDPPort, def.LocalElevatorId, peerTxEnable)

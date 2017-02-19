@@ -1,3 +1,4 @@
+
 package network
 
 import (
@@ -10,7 +11,9 @@ import (
 	"os"
 	//"time"
 	"log"
+
 )
+
 
 
 
@@ -22,6 +25,7 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, NumOnli
 		fmt.Println(err)
 		localIP = "DISCONNECTED"
 	}
+
 	def.LocalElevatorId = localIP.String()//fmt.Sprintf(localIP) //fmt.Sprintf("%s-%d", localIP, os.Getpid())
 
 	//Initialize peerServer that handles alive and lost elevators
@@ -58,4 +62,5 @@ func forwardOutgoing(outgoingMsg <-chan def.Message, msgTx chan<- def.Message){
 		msgTx <- msg
 	}	
 }
+
 

@@ -9,6 +9,20 @@ import "time"
 const NumFloors = 4
 const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
+
+const (
+	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
+    BtnUp       int = 0
+	BtnDown     int = 1
+	BtnInside   int = 2
+)
+
+const (
+	DirUp   int = 1
+	DirIdle int = 0
+	DirDown int = -1
+)
+
 const ElevatorTimeoutDuration = 500 * time.Millisecond
 const AliveMessageInterval = 50 * time.Millisecond
 const UDPPort = 13131
@@ -17,13 +31,6 @@ var LocalElevatorId string
 
 type NumOnline int
 
-const (
-	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-	up     int = 1
-	inside int = 0
-	down   int = -1
-	idle int = 0
-)
 
 type Message struct{
 	Category	int
@@ -76,8 +83,6 @@ type EventChan struct {
 	DoorTimeout  chan bool
 	DeadElevator chan int
 }
-
-
 
 // Colors for printing to console
 const Col0 = "\x1b[30;1m" // Dark grey

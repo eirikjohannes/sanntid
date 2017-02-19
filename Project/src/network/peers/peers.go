@@ -1,6 +1,7 @@
 package peers
 
 import (
+
 	def "definitions"
 	"fmt"
 	"net"
@@ -24,6 +25,7 @@ func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def
 	lastSeen := make(map[string]time.Time)
 
 	conn := conn.DialBroadcastUDP(port)
+
 	for {
 		updated := false
 
@@ -33,6 +35,7 @@ func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def
 		id := string(buf[:n])
 
 		// Adding new connection
+
 		P.New = ""
 		if id != "" {
 			if _, idExists := lastSeen[id]; !idExists {
@@ -44,6 +47,7 @@ func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def
 		}
 
 		// Removing dead connection
+
 		P.Lost = make([]string, 0)
 		for k, v := range lastSeen {
 			if time.Now().Sub(v) > timeout {
@@ -55,6 +59,7 @@ func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def
 
 		// Sending update
 		if updated {
+
 			P.Peers = make([]string, 0, len(lastSeen))
 
 			for k, _ := range lastSeen {

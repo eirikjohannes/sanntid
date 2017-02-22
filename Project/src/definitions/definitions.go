@@ -9,6 +9,9 @@ import "time"
 const NumFloors = 4
 const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
+const OrderTimeoutDuration = 30 * time.Second
+const CostReplyTimeoutDuration = 2 * time.Second
+
 
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
@@ -23,7 +26,7 @@ const (
 	DirDown int = -1
 )
 
-const ElevatorTimeoutDuration = 500 * time.Millisecond
+const ElevatorTimeoutDuration = 2000 * time.Millisecond
 const AliveMessageInterval = 50 * time.Millisecond
 const UDPPort = 13131
 

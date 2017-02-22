@@ -20,7 +20,7 @@ func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButto
 
 	if targetDir > 0 && dir == def.DirUp || dir == def.DirIdle {
 		for floor := prevFloor; floor < targetFloor || floor == def.NumFloors; floor++ {
-			if queue.hasLocalRequest(floor, targetButton) || queue.hasLocalRequest(floor, def.BtnInside) {
+			if queue.hasLocalOrder(floor, targetButton) || queue.hasLocalOrder(floor, def.BtnInside) {
 				totalCost++
 			}
 			totalCost++
@@ -28,7 +28,7 @@ func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButto
 	}
 	if targetDir < 0 && dir == def.DirDown || dir == def.DirIdle {
 		for floor := prevFloor; floor > targetFloor || floor == 0; floor-- {
-			if queue.hasLocalRequest(floor, targetButton) || queue.hasLocalRequest(floor, def.BtnInside) {
+			if queue.hasLocalOrder(floor, targetButton) || queue.hasLocalOrder(floor, def.BtnInside) {
 				totalCost++
 			}
 			totalCost++

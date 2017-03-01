@@ -1,7 +1,6 @@
 package bcast
 
 import (
-
 	"encoding/json"
 	"fmt"
 	"net"
@@ -10,10 +9,9 @@ import (
 	"strings"
 )
 
-
 // Matches type-tagged JSON received on `port` to element types of `chans`, then
 // sends the decoded value on the corresponding channel
-func Receiver(port int, chans ...interface{}) {
+func Ostepop(port int, chans ...interface{}) { //WHyTHE FUCK wont it find .Reciever
 	checkArgs(chans...)
 
 	var buf [1024]byte
@@ -65,7 +63,6 @@ func Transmitter(port int, chans ...interface{}) {
 		conn.WriteTo([]byte(typeNames[chosen]+string(buf)), addr)
 	}
 }
-
 
 // Checks that args to Tx'er/Rx'er are valid:
 //  All args must be channels

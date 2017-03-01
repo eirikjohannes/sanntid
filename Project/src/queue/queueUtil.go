@@ -50,7 +50,21 @@ func OrderCompleted(floor int, outgoingMsgCh chan<- def.message) {
 	}
 }
 
+func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message) {
+	RemoveOrder(floor, btn)
+	//log jepp jepp
+	outgoingMsg <- def.Message{def.NewOrder, floor, btn}
+}
 
+func ReassignOrdersFromDeadElevator(addr string, outgoingMsgCh chan<- def.Message) {
+	for floor := 0; floor < def.NumFloors; floor++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
+			if queue.Matrix[floor][btn].Addr == addr {
+				ReassignOrder(floor, btn, outgoingMsgCh)
+			}
+		}
+	}
+}
 
 func (q *QueueType) setOrder(floor, btn int, order OrderInfo) {
 	q.Matrix[floor][btn] = order

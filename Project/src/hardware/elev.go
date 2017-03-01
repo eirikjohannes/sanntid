@@ -8,7 +8,7 @@ package hardware
 import "C"
 import (
 	def "definitions"
-//	"log"
+	//	"log"
 )
 
 var lampChannelMatrix = [def.NumFloors][def.NumButtons]int{

@@ -9,6 +9,11 @@ import "time"
 const NumFloors = 4
 const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
+const ElevatorTimeoutDuration = 500 * time.Millisecond
+const AliveMessageInterval = 50 * time.Millisecond
+const UDPPort = 13131
+const ElevatorOrderTimeoutDuration = 2 * time.Second
+const CostReplyTimeoutDuration = 500 * time.Millisecond
 
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
@@ -23,13 +28,10 @@ const (
 	DirDown int = -1
 )
 
-const ElevatorTimeoutDuration = 500 * time.Millisecond
-const AliveMessageInterval = 50 * time.Millisecond
-const UDPPort = 13131
-
 var LocalElevatorId string
+var OnlineElevators int
 
-type NumOnline int
+type NumOnline int //kan slettes?
 
 type Message struct {
 	Category int

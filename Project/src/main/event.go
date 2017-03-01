@@ -14,8 +14,8 @@ var elevatorPeerUpdate def.PeerUpdate
 
 func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh def.HardwareChan) {
 
-	//Initialiser go funksjonen for å overvåke hardwareChanges
-	//Initialiser go ufnksjonen for å overvåke heis som ankommer en ny etasje
+	//Initialiser go funksjonen for
+	//Initialiser go ufnksjonen for
 	//resten skal kunne initialiseres andre steder.
 
 	go eventButtonPressed(hardwareCh.BtnPressed)
@@ -30,7 +30,7 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 		case btnLightUpdate := <-queue.LightUpdate:
 			log.Println(def.ColW, "Light update", def.ColN)
 			hardware.SetBtnLamp(btnLightUpdate)
-		case orderTimeout := <-queue.orderTimeoutChan:
+		case orderTimeout := <-queue.OrderTimeoutChan:
 			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
 		case motorDir := <-hardwareCh.MotorDir:
 			hardware.SetMotorDir(motorDir)
@@ -118,6 +118,14 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 	case def.Cost:
 		log.Println(def.ColC, "Cost reply recieved as event", ColN)
 		messageCh.CostReply <- incomingMsg
+	}
+}
+
+func handleBtnPress(btnPress def.ButtonPress, outgoingMsg chan<- def.Message) {
+	if btnPress.Button == def.BtnCab {
+		queue.AddOrder(btnPress.Floor, btnPress.Button, def.LocalElevatorId)
+	} else {
+		outgoingMsg <- def.Message{Category: def.NewRequest, Floor: btnPress.Floor, Button: btnPress.Button, Cost: 0, Addr: def.LocalElevatorId}
 	}
 }
 

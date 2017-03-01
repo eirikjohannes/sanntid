@@ -1,11 +1,14 @@
 package main
 
 import (
+	"assigner"
 	def "definitions"
 	"fmt"
+	"fsm"
 	"hardware"
 	"network"
-	//"os"
+	"os"
+	"queue"
 	"time"
 )
 
@@ -27,15 +30,19 @@ func main() {
 		BtnPressed:     make(chan def.ButtonPress, 10),
 		DoorTimerReset: make(chan bool),
 	}
-	go network.InitUDP(messageCh.Incoming, messageCh.Outgoing, eventCh.ElevatorPeerUpdate)
-	go PrintOrder(messageCh.Incoming, messageCh.Outgoing)
-	go hardware.Init()
-	go EventHandler(eventCh, messageCh, hardwareCh)
-
+	currentFloor := hardware.Init()
 	time.Sleep(time.Millisecond * 500)
+	go network.InitUDP(messageCh.Incoming, messageCh.Outgoing, eventCh.ElevatorPeerUpdate)
+	go EventHandler(eventCh, messageCh, hardwareCh)
+	go fsm.Init(eventCh, hardwareCh, currentFloor)
+	time.Sleep(time.Millisecond * 500)
+	go assigner.CollectCost(messageCh.CostReply)
+	go queue.RunBackup()
+	go PrintOrder(messageCh.Incoming, messageCh.Outgoing)
 	order := def.Message{Category: def.NewOrder, Floor: 1, Button: 2, Cost: 0, Addr: def.LocalElevatorId}
 
 	orderDistributeTimer := time.NewTicker(time.Second * 2)
+	go safeKill()
 	for {
 		<-orderDistributeTimer.C
 		messageCh.Outgoing <- order
@@ -64,4 +71,12 @@ func PrintOrder(incomingMsg chan def.Message, outgoingMsg chan def.Message) {
 
 	}
 
+}
+
+func safeKill() {
+	var c = make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	hardware.SetMotorDir(def.DirStop)
+	log.Fatal(def.Col0, "User terminated program.", def.ColN)
 }

@@ -12,9 +12,9 @@ const ElevatorDoorTimeoutDuration = 2 * time.Second
 
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-    BtnUp       int = 0
-	BtnDown     int = 1
-	BtnInside   int = 2
+	BtnUp     int = 0
+	BtnDown   int = 1
+	BtnInside int = 2
 )
 
 const (
@@ -31,26 +31,25 @@ var LocalElevatorId string
 
 type NumOnline int
 
-
-type Message struct{
-	Category	int
-	Floor	int
-	Button	int
-	Cost	int
-	Addr	string
+type Message struct {
+	Category int
+	Floor    int
+	Button   int
+	Cost     int
+	Addr     string
 }
 
-const {//Category for messages
-	Alive int= iota+1
+const ( //Category for messages
+	Alive int = iota + 1
 	NewOrder
 	CompleteOrder
 	Cost
-}
+)
 
-type ButtonPress struct{
-	Floor int
+type ButtonPress struct {
+	Floor  int
 	Button int
-} 
+}
 
 type LightUpdate struct {
 	Floor    int
@@ -59,28 +58,28 @@ type LightUpdate struct {
 }
 
 type PeerUpdate struct {
-	Peers []string
-	New   string
-	Lost  []string
+	Peers     []string
+	New       string
+	Lost      []string
 	NumOnline int
 }
 
 type MessageChan struct {
-	Outgoing 	chan Message
-	Incoming 	chan Message
-	CostReply 	chan Message
+	Outgoing  chan Message
+	Incoming  chan Message
+	CostReply chan Message
 }
 
 type HardwareChan struct {
 	MotorDir       chan int
 	FloorLamp      chan int
 	DoorLamp       chan bool
-	BtnPressed     chan BtnPress
+	BtnPressed     chan ButtonPress
 	DoorTimerReset chan bool
 }
 type EventChan struct {
-	FloorReached chan int
-	DoorTimeout  chan bool
+	FloorReached       chan int
+	DoorTimeout        chan bool
 	ElevatorPeerUpdate chan PeerUpdate
 }
 

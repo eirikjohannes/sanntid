@@ -1,7 +1,6 @@
 package peers
 
 import (
-
 	def "definitions"
 	"fmt"
 	"net"
@@ -10,15 +9,14 @@ import (
 	"time"
 )
 
-//PeerUpdate struct was here. Moved to definitions 
+//PeerUpdate struct was here. Moved to definitions
 
 var P def.PeerUpdate
 
 const interval = def.AliveMessageInterval
 const timeout = def.ElevatorTimeoutDuration
 
-
-func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def.NumOnline )) {
+func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate) {
 
 	var buf [1024]byte
 
@@ -65,11 +63,10 @@ func Reciever(port int, peerUpdateCh chan<- def.PeerUpdate, numOnline chan<- def
 			for k, _ := range lastSeen {
 				P.Peers = append(P.Peers, k)
 			}
-		
+
 			sort.Strings(P.Peers)
 			sort.Strings(P.Lost)
-			numOfPeers = len(P.Peers)
-			numOnline <- numOfPeers
+			P.NumOnline = len(P.Peers)
 			peerUpdateCh <- P
 		}
 	}

@@ -1,29 +1,26 @@
-/* Event.go fil for 
+//Event.go fil for
 
 package main
 
-import(
+import (
+	//"assigner"
 	def "definitions"
 	"fsm"
-	"assigner"
-	"queue"
 	"log"
-	
+	"queue"
 )
 
-var peers def.PeerUpdate 
-var 
+var elevatorPeerUpdate def.PeerUpdate
 
+func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh def.HardwareChan) {
 
-func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh def.HardwareChan){
-	
 	//Initialiser go funksjonen for å overvåke hardwareChanges
 	//Initialiser go ufnksjonen for å overvåke heis som ankommer en ny etasje
 	//resten skal kunne initialiseres andre steder.
-	
+
 	go eventButtonPressed(hardwareCh.BtnPressed)
 	go eventElevatorAtFloor(eventCh.FloorReached)
-	
+
 	for {
 		select {
 		case btnPress := <-hardwareCh.BtnPressed:
@@ -48,54 +45,56 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 			fsm.OnFloorArrival(hardwareCh, messageCh.Outgoing, currFloor)
 		case <-eventCh.DoorTimeout:
 			fsm.OnDoorTimeout(hardwareCh)
+		case elevatorPeerUpdate <- eventCh.ElevatorPeerUpdate:
+			if elevatorPeerUpdate.Lost {
+				handleDeadElevator(elevatorPeerUpdate.Lost, outgoingMsg, messageCh.NumOnline)
+			}
 		}
-		case elevatorPeerUpdate<- eventCh.ElevatorPeerUpdate:
-			handleDeadElevator(elevatorPeerUpdate.Lost, outgoingMsg, messageCh.NumOnline)
 		time.Sleep(10 * time.Millisecond)
-	}
-} 
-
-func eventButtonPressed(hwCh chan<- def.BtnPressed){
-	var buttonStateArray [def.NumFloors][def.NumButtons]bool
-	
-	for {
-		for floor:=0; floor<def.NumFloors;floor++{
-			for btn:=0; btn<def.NumButtons; btn++{
-				if(floor==0 && btn==def.BtnHallDown) || (floor==def.NumFloors-1 && btn == def.BtnHallUp){
-					continue
-					//"Invalid operation", do nothing
-				}
-				if hardware.ReadButton(floor, btn){
-					if !(buttonStateArray[floor][btn] {
-						hwCh<-def.ButtonPress{Floor: floor, Button: btn}
-					}
-					buttonStateArray[floor][btn]=true
-				} else{
-					buttonStateArray[floor][btn]=false
-				}
-			}
-		}
-		time.Sleep(20*time.Millisecond)
-	}	
-} 
-
-func eventElevatorAtFloor(tempCh chan <- int){
-	var FloorReached = -7
-	var prevFloor = -10
-	for{
-		if hardware.GetFloor()!=-1{
-			FloorReached = hardware.GetFloor()
-			if prevFloor!=FloorReached {
-				tempCh<-FloorReached
-				prevFloor=FloorReached
-			}
-		}
-		time.Sleep(200*time.Millisecond)
 	}
 }
 
-func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan){
-	switch incomingMsg.Category{
+func eventButtonPressed(hwCh chan<- def.BtnPressed) {
+	var buttonStateArray [def.NumFloors][def.NumButtons]bool
+
+	for {
+		for floor := 0; floor < def.NumFloors; floor++ {
+			for btn := 0; btn < def.NumButtons; btn++ {
+				if (floor == 0 && btn == def.BtnHallDown) || (floor == def.NumFloors-1 && btn == def.BtnHallUp) {
+					continue
+					//"Invalid operation", do nothing
+				}
+				if hardware.ReadButton(floor, btn) {
+					if !(buttonStateArray[floor][btn]) {
+						hwCh <- def.ButtonPress{Floor: floor, Button: btn}
+					}
+					buttonStateArray[floor][btn] = true
+				} else {
+					buttonStateArray[floor][btn] = false
+				}
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func eventElevatorAtFloor(tempCh chan<- int) {
+	var FloorReached = -7
+	var prevFloor = -10
+	for {
+		if hardware.GetFloor() != -1 {
+			FloorReached = hardware.GetFloor()
+			if prevFloor != FloorReached {
+				tempCh <- FloorReached
+				prevFloor = FloorReached
+			}
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
+	switch incomingMsg.Category {
 	case def.Alive:
 		//Kan droppes pga peer stufF??
 		/*address:=incomingMsg.Addr
@@ -111,63 +110,20 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan){
 		}*/
 	case def.NewOrder:
 		log.Println(def.ColC, "New order incomming!", def.ColN)
-		cost:=queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
-		messageCh.Outgoing<-def.Message{Category: def.Cost, Floor: incomingMsg.Floor,Button: incomingMsg.Button, Cost: cost}
+		cost := queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
+		messageCh.Outgoing <- def.Message{Category: def.Cost, Floor: incomingMsg.Floor, Button: incomingMsg.Button, Cost: cost}
 	case def.CompleteOrder:
-		queue.RemoveRequest(incomingMsg.Floor,incomingMsg.Button)
+		queue.RemoveRequest(incomingMsg.Floor, incomingMsg.Button)
 		log.Println(def.ColG, "Order is completed", def.ColN)
 	case def.Cost:
 		log.Println(def.ColC, "Cost reply recieved as event", ColN)
 		messageCh.CostReply <- incomingMsg
-}
-
-//This is not finished, sanity check this
-func handleDeadElevator(address []string, outgoingMsg chan <- def.Message){
-	for i=0; i<len(address); i++; {
-		queue.ReassignAllRequestsFrom(address[i], outgoingMsg)
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//This is not finished, sanity check this
+func handleDeadElevator(address []string, outgoingMsg chan<- def.Message) {
+	for i = 0; i < len(address); i++ {
+		queue.ReassignAllRequestsFrom(address[i], outgoingMsg)
+	}
+}

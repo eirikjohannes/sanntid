@@ -3,7 +3,6 @@ package queue
 import (
 	def "definitions"
 	//"log"
-	"fmt"
 	"time"
 )
 
@@ -28,7 +27,6 @@ func AddOrder(floor, btn int, addr string) {
 		queue.setOrder(floor, btn, OrderInfo{true, addr, nil})
 		if addr == def.LocalElevatorId {
 			NewOrder <- true
-			fmt.Println("This is the bestest elevator, neworder=====True")
 		} else {
 			go queue.startTimer(floor, btn)
 		}

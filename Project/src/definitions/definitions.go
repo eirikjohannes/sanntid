@@ -9,7 +9,7 @@ const ElevatorDoorTimeoutDuration = 2 * time.Second
 const ElevatorTimeoutDuration = 500 * time.Millisecond
 const AliveMessageInterval = 50 * time.Millisecond
 const UDPPort = 13131
-const ElevatorOrderTimeoutDuration = 2 * time.Second
+const ElevatorOrderTimeoutDuration = 1 * time.Second
 const CostReplyTimeoutDuration = 500 * time.Millisecond
 
 const (

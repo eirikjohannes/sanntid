@@ -2,7 +2,6 @@ package queue
 
 import (
 	def "definitions"
-	"fmt"
 	"log"
 	"time"
 )
@@ -63,7 +62,6 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 	var bestElevator string
 
 	for order, replyList := range orderMap {
-		fmt.Println("replylist:", replyList)
 		if numOnline == 0 {
 
 			bestElevator = def.LocalElevatorId
@@ -83,7 +81,6 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 					}
 				}
 			}
-			fmt.Println("Best elevator is:\t", bestElevator)
 			AddOrder(order.floor, order.button, bestElevator)
 			order.timer.Stop()
 			delete(orderMap, order)

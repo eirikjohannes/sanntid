@@ -2,7 +2,6 @@ package fsm
 
 import (
 	def "definitions"
-	"fmt"
 	"log"
 	"queue"
 	"time"
@@ -30,7 +29,6 @@ func Init(eventCh def.EventChan, hardwareCh def.HardwareChan, startFloor int) {
 }
 
 func OnNewOrder(OutgoingMsg chan<- def.Message, hardwareCh def.HardwareChan) {
-	fmt.Println("ON NEW ORDER--------------------------------")
 	switch Elevator.Behaviour {
 	case doorOpen:
 		if queue.ShouldStop(Elevator.Floor, Elevator.Dir) {
@@ -55,9 +53,7 @@ func OnNewOrder(OutgoingMsg chan<- def.Message, hardwareCh def.HardwareChan) {
 
 func OnFloorArrival(hardwareCh def.HardwareChan, OutgoingMsg chan<- def.Message, newFloor int) {
 	Elevator.Floor = newFloor
-	fmt.Println("Got here")
 	hardwareCh.FloorLamp <- Elevator.Floor
-	fmt.Println("But not here")
 	switch Elevator.Behaviour {
 	case moving:
 		if queue.ShouldStop(newFloor, Elevator.Dir) {

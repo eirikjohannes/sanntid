@@ -9,6 +9,7 @@ import "time"
 const NumFloors = 4
 const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
+
 const ElevatorTimeoutDuration = 500 * time.Millisecond
 const AliveMessageInterval = 50 * time.Millisecond
 const UDPPort = 13131

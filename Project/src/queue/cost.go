@@ -2,10 +2,11 @@ package queue
 
 import def "definitions"
 
-func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButton int) int {
+func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButton int) int{
 	totalCost := 0
-	dir := currentDir
-	targetDir := targetFloor - prevFloor
+	dir       := currentDir
+	targetDir := targetFloor-prevFloor
+
 
 	if currentFloor == -1 {
 		totalCost++

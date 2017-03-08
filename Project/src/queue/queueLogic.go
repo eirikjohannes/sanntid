@@ -32,15 +32,15 @@ func (q *QueueType) hasOrderBelow(floor int) bool {
 	return false
 }
 
-func ShouldStop(floor, dir int) bool {
-	switch dir {
+func ShouldStop(floor, dir int) bool{
+	switch dir{
 	case def.DirDown:
 		return queue.hasLocalOrder(floor, def.BtnDown) ||
 			queue.hasLocalOrder(floor, def.BtnInside) ||
 			!queue.hasOrderBelow(floor)
 	case def.DirUp:
 		return queue.hasLocalOrder(floor, def.BtnUp) ||
-			queue.hasLocalOrder(floor, def.BtnInside) ||
+ 			queue.hasLocalOrder(floor, def.BtnCab) ||
 			!queue.hasOrderAbove(floor)
 	}
 	return false

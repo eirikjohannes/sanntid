@@ -33,7 +33,7 @@ func OnNewOrder(OutgoingMsg chan<- def.Message, hardwareCh def.HardwareChan) {
 	case doorOpen:
 		if queue.ShouldStop(Elevator.Floor, Elevator.Dir) {
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, OutgoingMsg)
+			queue.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
 		}
 	case moving:
 		//Do nothing
@@ -42,7 +42,7 @@ func OnNewOrder(OutgoingMsg chan<- def.Message, hardwareCh def.HardwareChan) {
 		if Elevator.Dir == def.DirIdle {
 			hardwareCh.DoorLamp <- true
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, OutgoingMsg)
+			queue.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
 			Elevator.Behaviour = doorOpen
 		} else {
 			hardwareCh.MotorDir <- Elevator.Dir
@@ -57,10 +57,11 @@ func OnFloorArrival(hardwareCh def.HardwareChan, OutgoingMsg chan<- def.Message,
 	switch Elevator.Behaviour {
 	case moving:
 		if queue.ShouldStop(newFloor, Elevator.Dir) {
+			tempDir := Elevator.Dir
 			hardwareCh.MotorDir <- def.DirIdle
 			hardwareCh.DoorLamp <- true
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, OutgoingMsg)
+			queue.OrderCompleted(Elevator.Floor, tempDir, OutgoingMsg)
 			Elevator.Behaviour = doorOpen
 		}
 	}

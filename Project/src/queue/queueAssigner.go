@@ -63,7 +63,6 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 
 	for order, replyList := range orderMap {
 		if numOnline == 0 {
-
 			bestElevator = def.LocalElevatorId
 			AddOrder(order.floor, order.button, bestElevator)
 			order.timer.Stop()

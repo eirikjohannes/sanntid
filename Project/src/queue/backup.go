@@ -23,7 +23,7 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 	// Read last time backup was modified
 	fileStat, _ := os.Stat(filename)
 
-	// Resend all hall Orders found in backup, and add cab Orders to queue:
+	// Resend all hall Orders found in backup, and add internal Orders to queue:
 	for floor := 0; floor < def.NumFloors; floor++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
 			if backup.hasOrder(floor, btn) {

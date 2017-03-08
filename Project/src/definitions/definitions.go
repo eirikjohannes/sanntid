@@ -1,7 +1,3 @@
-/*Definition file for elevator project
-Group 13, Einar Henriksen, Eirik Larsen
-*/
-
 package definitions
 
 import "time"
@@ -17,7 +13,6 @@ const ElevatorOrderTimeoutDuration = 2 * time.Second
 const CostReplyTimeoutDuration = 500 * time.Millisecond
 
 const (
-	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
 	BtnUp     int = 0
 	BtnDown   int = 1
 	BtnInside int = 2
@@ -31,8 +26,6 @@ const (
 
 var LocalElevatorId string
 var OnlineElevators int
-
-type NumOnline int //kan slettes?
 
 type Message struct {
 	Category int

@@ -64,7 +64,13 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 
 	for order, replyList := range orderMap {
 		fmt.Println("replylist:", replyList)
-		if len(replyList) == numOnline || isTimeout {
+		if numOnline == 0 {
+
+			bestElevator = def.LocalElevatorId
+			AddOrder(order.floor, order.button, bestElevator)
+			order.timer.Stop()
+			delete(orderMap, order)
+		} else if len(replyList) == numOnline || isTimeout {
 			lowestCost := 9001
 			for _, reply := range replyList {
 				if reply.cost < lowestCost {

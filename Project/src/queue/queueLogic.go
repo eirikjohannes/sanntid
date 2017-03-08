@@ -2,8 +2,6 @@ package queue
 
 import def "definitions"
 
-//import "fmt"
-
 func (q *QueueType) hasOrder(floor, btn int) bool {
 	return q.Matrix[floor][btn].Status
 }
@@ -63,7 +61,6 @@ func ChooseDirection(floor, dir int) int {
 			return def.DirUp
 		}
 	}
-
 	return def.DirIdle
 
 }

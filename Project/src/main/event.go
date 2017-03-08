@@ -1,24 +1,17 @@
-//Event.go fil for
-
 package main
 
 import (
-	//"assigner"
 	def "definitions"
-	"fmt"
+
 	"fsm"
 	"hardware"
 	"log"
+	"network"
 	"queue"
 	"time"
 )
 
 func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh def.HardwareChan) {
-
-	//Initialiser go funksjonen for
-	//Initialiser go ufnksjonen for
-	//resten skal kunne initialiseres andre steder.
-
 	go eventButtonPressed(hardwareCh.BtnPressed)
 	go eventElevatorAtFloor(eventCh.FloorReached)
 
@@ -26,7 +19,6 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 
 		select {
 		case btnPress := <-hardwareCh.BtnPressed:
-			fmt.Println("Button is pressed")
 			handleBtnPress(btnPress, messageCh.Outgoing)
 		case incomingMsg := <-messageCh.Incoming:
 			go sortAndHandleMessage(incomingMsg, messageCh)
@@ -36,29 +28,33 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 		case orderTimeout := <-queue.OrderTimeoutChan:
 			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
 		case motorDir := <-hardwareCh.MotorDir:
-			fmt.Println("Did not Got here")
 			hardware.SetMotorDir(motorDir)
 		case floorLamp := <-hardwareCh.FloorLamp:
 			hardware.SetFloorLamp(floorLamp)
 		case doorLamp := <-hardwareCh.DoorLamp:
 			hardware.SetDoorLamp(doorLamp)
 		case <-queue.NewOrder:
-			fmt.Println(def.ColW, "Event: New order", def.ColN)
+			log.Println(def.ColW, "Event: New order", def.ColN)
 			fsm.OnNewOrder(messageCh.Outgoing, hardwareCh)
 		case currFloor := <-eventCh.FloorReached:
-			fmt.Println("got here and...")
 			fsm.OnFloorArrival(hardwareCh, messageCh.Outgoing, currFloor)
-			fmt.Println("hung")
 		case <-eventCh.DoorTimeout:
 			fsm.OnDoorTimeout(hardwareCh)
+
 		case elevatorPeerUpdate := <-eventCh.ElevatorPeerUpdate:
-			fmt.Println("elevatorPeerUpdate")
 			def.OnlineElevators = elevatorPeerUpdate.NumOnline
+			if def.OnlineElevators == 0 {
+				def.LocalElevatorId = "DISCONNECTED"
+				log.Println(def.ColR, "Not connected to network, assigned DISCONNECTED", def.ColN)
+			} else if def.LocalElevatorId == "DISCONNECTED" {
+				network.AssignId()
+				deadElevator := []string{"DISCONNECTED"}
+				handleDeadElevator(deadElevator, messageCh.Outgoing)
+			}
 			if len(elevatorPeerUpdate.Lost) != 0 {
 				handleDeadElevator(elevatorPeerUpdate.Lost, messageCh.Outgoing)
 			}
 		}
-		fmt.Println("Completed one select")
 		time.Sleep(10 * time.Millisecond)
 	}
 }
@@ -79,7 +75,6 @@ func eventButtonPressed(hardwareCh chan<- def.ButtonPress) {
 
 					if !(buttonStateArray[floor][btn]) {
 						hardwareCh <- def.ButtonPress{Floor: floor, Button: btn}
-						fmt.Println("Looping")
 					}
 					buttonStateArray[floor][btn] = true
 				} else {
@@ -108,19 +103,6 @@ func eventElevatorAtFloor(tempCh chan<- int) {
 
 func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 	switch incomingMsg.Category {
-	case def.Alive:
-		//Kan droppes pga peer stufF??
-		/*address:=incomingMsg.Addr
-		if connection, exist := onlineElevatorMap[address]; exist{
-			connection.Timer.Reset(def.ElevTimeoutDuration)
-			//Check how the connection type something works
-		} else{
-			newConnection := def.UdpConnection{Addr: addr, Timer: time.NewTimer(def.ElevTimeoutDuration)}
-			onlineElevatorMap[addr] = newConnection
-			msgCh.NumOnline <- len(onlineElevatorMap)
-			go connectionTimer(&newConnection, msgCh.Outgoing, msgCh.NumOnline)
-			log.Println(def.ColG, "New elevator: ", addr, " | Number online: ", len(onlineElevatorMap), def.ColN)
-		}*/
 	case def.NewOrder:
 		log.Println(def.ColC, "New order incomming!", def.ColN)
 		cost := queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
@@ -142,7 +124,6 @@ func handleBtnPress(btnPress def.ButtonPress, outgoingMsg chan<- def.Message) {
 	}
 }
 
-//This is not finished, sanity check this
 func handleDeadElevator(address []string, outgoingMsg chan<- def.Message) {
 	for i := 0; i < len(address); i++ {
 		queue.ReassignOrdersFromDeadElevator(address[i], outgoingMsg)

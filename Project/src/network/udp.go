@@ -14,15 +14,15 @@ import (
 
 func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, ElevatorPeerUpdateCh chan def.PeerUpdate) {
 
-	//var elevatorId string
+	def.OnlineElevators = 1
 	localIP, err := localip.LocalIP()
 	if err != nil {
 		fmt.Println(err)
 		localIP = "DISCONNECTED"
+		def.OnlineElevators = 0
 	}
 
 	def.LocalElevatorId = localIP //fmt.Sprintf(localIP) //fmt.Sprintf("%s-%d", localIP, os.Getpid())
-	def.OnlineElevators = 1
 	//Initialize peerServer that handles alive and lost elevators
 
 	peerTxEnable := make(chan bool)
@@ -35,24 +35,34 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, Elevato
 	go bcast.Transmitter(def.UDPPort, msgTx)
 
 	go forwardIncoming(incomingMsg, msgRx)
-	go forwardOutgoing(outgoingMsg, msgTx)
+	go forwardOutgoing(outgoingMsg, msgRx, msgTx)
 
 	log.Println(def.ColG, "Network initialized - IP: ", def.LocalElevatorId, def.ColN)
 }
 
+func AssignId() {
+	tempID, err := localip.LocalIP()
+	fmt.Println(err)
+	log.Println(def.ColG, "New ID aqcuired: ", tempID, def.ColN)
+	def.LocalElevatorId = tempID
+
+}
 func forwardIncoming(incomingMsg chan<- def.Message, msgRx <-chan def.Message) {
 	for {
 		msg := <-msgRx
-		fmt.Println("Incoming message: ", msg)
 		incomingMsg <- msg
 	}
 }
 
-func forwardOutgoing(outgoingMsg <-chan def.Message, msgTx chan<- def.Message) {
+func forwardOutgoing(outgoingMsg <-chan def.Message, msgRx chan def.Message, msgTx chan<- def.Message) {
 	for {
 		msg := <-outgoingMsg
-		fmt.Println("Outgoing message: ", msg)
+		if def.OnlineElevators == 0 {
+			//This elevator is not connected to a network. Workaround:
+			msgRx <- msg
+		} else {
+			msgTx <- msg
+		}
 
-		msgTx <- msg
 	}
 }

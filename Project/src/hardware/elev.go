@@ -8,7 +8,7 @@ package hardware
 import "C"
 import (
 	def "definitions"
-	//	"log"
+	"log"
 )
 
 var lampChannelMatrix = [def.NumFloors][def.NumButtons]int{
@@ -53,7 +53,7 @@ func Init() int {
 	SetMotorDir(def.DirIdle)
 	SetFloorLamp(floor)
 
-	//log.Println(def.ColG, "Hardware initialized.", def.ColN)
+	log.Println(def.ColG, "Hardware initialized.", def.ColN)
 	return floor
 }
 
@@ -105,7 +105,7 @@ func SetFloorLamp(floor int) {
 	}
 }
 
-func ReadBtn(floor int, btn int) bool {
+func ReadButton(floor int, btn int) bool {
 	if ioReadBit(btnChannelMatrix[floor][btn]) {
 		return true
 	}

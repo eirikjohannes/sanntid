@@ -34,18 +34,20 @@ func AddOrder(floor, btn int, addr string) {
 	}
 }
 
-func RemoveOrder(floor, btn int, addr string) {
-	if queue.Matrix[floor][btn].Addr == addr {
+func RemoveOrder(floor, btn int /*,addr string*/) {
+	/*if queue.Matrix[floor][btn].Addr == addr {
 		queue.setOrder(floor, btn, OrderInfo{false, "", nil})
 		queue.stopTimer(floor, btn)
-	}
+	}*/
+	queue.setOrder(floor, btn, OrderInfo{false, "", nil})
+	queue.stopTimer(floor, btn)
 }
 
 func OrderCompleted(floor, dir int, outgoingMsgCh chan<- def.Message) {
 	for btn := 0; btn < def.NumButtons; btn++ {
 		if queue.Matrix[floor][btn].Addr == def.LocalElevatorId {
 			if btn == def.BtnInside {
-				RemoveOrder(floor, btn, def.LocalElevatorId)
+				RemoveOrder(floor, btn) /*, def.LocalElevatorId)*/
 			} else {
 				outgoingMsgCh <- def.Message{Category: def.CompleteOrder, Floor: floor, Button: btn, Addr: def.LocalElevatorId}
 			}
@@ -53,8 +55,8 @@ func OrderCompleted(floor, dir int, outgoingMsgCh chan<- def.Message) {
 	}
 }
 
-func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message, addr string) {
-	RemoveOrder(floor, btn, addr)
+func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message /*,addr string*/) {
+	RemoveOrder(floor, btn /*, addr)*/)
 	outgoingMsg <- def.Message{Category: def.NewOrder, Floor: floor, Button: btn}
 }
 
@@ -62,7 +64,7 @@ func ReassignOrdersFromDeadElevator(addr string, outgoingMsgCh chan<- def.Messag
 	for floor := 0; floor < def.NumFloors; floor++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
 			if queue.Matrix[floor][btn].Addr == addr {
-				ReassignOrder(floor, btn, outgoingMsgCh, addr)
+				ReassignOrder(floor, btn, outgoingMsgCh /*, addr*/)
 			}
 		}
 	}

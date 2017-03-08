@@ -7,6 +7,7 @@ import (
 )
 
 type OrderInfo struct {
+
 	Status  bool
 	Addr    string
 	Timer   *time.Timer
@@ -26,7 +27,7 @@ func AddOrder(floor, btn int, addr string) {
 	if queue.hasOrder(floor,btn) == false {
 		queue.setOrder(floor, btn, OrderInfo{true, addr, nil})
 		if addr == def.LocalIP {
-			NewRequest <- true
+			NewOrder <- true
 		}else{
 			go queue.startTimer(floor,btn)
 		}
@@ -37,6 +38,7 @@ func RemoveOrder(floor, btn int) {
 	queue.setOrder(floor, btn, OrderInfo{false, "", nil})
 	queue.stopTimer(floor, btn)
 }
+
 
 func OrderCompleted(floor int, outgoingMsgCh chan<- def.message) {
 	for btn := 0; btn < def.NumButtons; btn++ {
@@ -74,10 +76,12 @@ func (q *QueueType) setOrder(floor, btn int, order OrderInfo) {
 }
 
 func (q *QueueType) startTimer(floor, btn int) {
-	q.Matrix[floor][btn].Timer = time.NewTimer(def.OrderTimeoutDuration)
+
+	q.Matrix[floor][btn].Timer = time.NewTimer(def.ElevatorOrderTimeoutDuration)
 	<-q.Matrix[floor][btn].Timer.C
 	if q.Matrix[floor][btn].Status {
 		OrderTimeoutChan <- def.BtnPress{floor, btn}
+
 	}
 }
 

@@ -9,15 +9,18 @@ import "time"
 const NumFloors = 4
 const NumButtons = 3
 const ElevatorDoorTimeoutDuration = 2 * time.Second
-const OrderTimeoutDuration = 30 * time.Second
-const CostReplyTimeoutDuration = 2 * time.Second
 
+const ElevatorTimeoutDuration = 500 * time.Millisecond
+const AliveMessageInterval = 50 * time.Millisecond
+const UDPPort = 13131
+const ElevatorOrderTimeoutDuration = 2 * time.Second
+const CostReplyTimeoutDuration = 500 * time.Millisecond
 
 const (
 	//up/down are external buttons, inside is the inside-button, floor is specified in struct newOrder
-    BtnUp       int = 0
-	BtnDown     int = 1
-	BtnInside   int = 2
+	BtnUp     int = 0
+	BtnDown   int = 1
+	BtnInside int = 2
 )
 
 const (
@@ -26,34 +29,30 @@ const (
 	DirDown int = -1
 )
 
-const ElevatorTimeoutDuration = 2000 * time.Millisecond
-const AliveMessageInterval = 50 * time.Millisecond
-const UDPPort = 13131
-
 var LocalElevatorId string
+var OnlineElevators int
 
-type NumOnline int
+type NumOnline int //kan slettes?
 
-
-type Message struct{
-	Category	int
-	Floor	int
-	Button	int
-	Cost	int
-	Addr	string
+type Message struct {
+	Category int
+	Floor    int
+	Button   int
+	Cost     int
+	Addr     string
 }
 
-const {//Category for messages
-	Alive int= iota+1
-	NewRequest
-	CompleteRequest
+const ( //Category for messages
+	Alive int = iota + 1
+	NewOrder
+	CompleteOrder
 	Cost
-}
+)
 
-type ButtonPress struct{
-	Floor int
+type ButtonPress struct {
+	Floor  int
 	Button int
-} 
+}
 
 type LightUpdate struct {
 	Floor    int
@@ -62,29 +61,29 @@ type LightUpdate struct {
 }
 
 type PeerUpdate struct {
-	Peers []string
-	New   string
-	Lost  []string
+	Peers     []string
+	New       string
+	Lost      []string
+	NumOnline int
 }
 
 type MessageChan struct {
-	Outgoing 	chan Message
-	Incoming 	chan Message
-	CostReply 	chan Message
-	NumOnline 	chan int
+	Outgoing  chan Message
+	Incoming  chan Message
+	CostReply chan Message
 }
 
 type HardwareChan struct {
 	MotorDir       chan int
 	FloorLamp      chan int
 	DoorLamp       chan bool
-	BtnPressed     chan BtnPress
+	BtnPressed     chan ButtonPress
 	DoorTimerReset chan bool
 }
 type EventChan struct {
-	FloorReached chan int
-	DoorTimeout  chan bool
-	DeadElevator chan int
+	FloorReached       chan int
+	DoorTimeout        chan bool
+	ElevatorPeerUpdate chan PeerUpdate
 }
 
 // Colors for printing to console

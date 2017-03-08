@@ -7,6 +7,7 @@ func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButto
 	dir       := currentDir
 	targetDir := targetFloor-prevFloor
 
+
 	if currentFloor == -1 {
 		totalCost++
 	} else if dir != def.DirIdle {
@@ -14,7 +15,7 @@ func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButto
 	}
 	if dir != def.DirIdle {
 		if targetDir != dir {
-			totCost += 10
+			totalCost += 10
 		}
 	}
 

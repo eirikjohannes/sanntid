@@ -5,37 +5,42 @@ package main
 import (
 	//"assigner"
 	def "definitions"
+	"fmt"
 	"fsm"
+	"hardware"
 	"log"
 	"queue"
+	"time"
 )
-
-var elevatorPeerUpdate def.PeerUpdate
 
 func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh def.HardwareChan) {
 
-	//Initialiser go funksjonen for å overvåke hardwareChanges
-	//Initialiser go ufnksjonen for å overvåke heis som ankommer en ny etasje
+	//Initialiser go funksjonen for
+	//Initialiser go ufnksjonen for
 	//resten skal kunne initialiseres andre steder.
 
 	go eventButtonPressed(hardwareCh.BtnPressed)
 	go eventElevatorAtFloor(eventCh.FloorReached)
 
 	for {
+
 		select {
 		case btnPress := <-hardwareCh.BtnPressed:
+			fmt.Println("Button is pressed")
 			handleBtnPress(btnPress, messageCh.Outgoing)
 		case incomingMsg := <-messageCh.Incoming:
 			go sortAndHandleMessage(incomingMsg, messageCh)
 		case btnLightUpdate := <-queue.LightUpdate:
 			log.Println(def.ColW, "Light update", def.ColN)
 			hardware.SetBtnLamp(btnLightUpdate)
-		case orderTimeout := <-queue.orderTimeoutChan:
+		case orderTimeout := <-queue.OrderTimeoutChan:
 			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
 		case motorDir := <-hardwareCh.MotorDir:
+
 			hardware.SetMotorDir(motorDir)
 		case floorLamp := <-hardwareCh.FloorLamp:
 			hardware.SetFloorLamp(floorLamp)
+			fmt.Println("set floorlamp")
 		case doorLamp := <-hardwareCh.DoorLamp:
 			hardware.SetDoorLamp(doorLamp)
 		case <-queue.NewOrder:
@@ -45,28 +50,32 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 			fsm.OnFloorArrival(hardwareCh, messageCh.Outgoing, currFloor)
 		case <-eventCh.DoorTimeout:
 			fsm.OnDoorTimeout(hardwareCh)
-		case elevatorPeerUpdate <- eventCh.ElevatorPeerUpdate:
-			if elevatorPeerUpdate.Lost {
-				handleDeadElevator(elevatorPeerUpdate.Lost, outgoingMsg, messageCh.NumOnline)
+		case elevatorPeerUpdate := <-eventCh.ElevatorPeerUpdate:
+			if len(elevatorPeerUpdate.Lost) != 0 {
+				handleDeadElevator(elevatorPeerUpdate.Lost, messageCh.Outgoing)
 			}
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func eventButtonPressed(hwCh chan<- def.BtnPressed) {
+func eventButtonPressed(hardwareCh chan<- def.ButtonPress) {
 	var buttonStateArray [def.NumFloors][def.NumButtons]bool
 
 	for {
 		for floor := 0; floor < def.NumFloors; floor++ {
 			for btn := 0; btn < def.NumButtons; btn++ {
-				if (floor == 0 && btn == def.BtnHallDown) || (floor == def.NumFloors-1 && btn == def.BtnHallUp) {
+
+				if (floor == 0 && btn == def.BtnDown) || (floor == def.NumFloors-1 && btn == def.BtnUp) {
+
 					continue
 					//"Invalid operation", do nothing
 				}
 				if hardware.ReadButton(floor, btn) {
+
 					if !(buttonStateArray[floor][btn]) {
-						hwCh <- def.ButtonPress{Floor: floor, Button: btn}
+						hardwareCh <- def.ButtonPress{Floor: floor, Button: btn}
+						fmt.Println("Looping")
 					}
 					buttonStateArray[floor][btn] = true
 				} else {
@@ -113,17 +122,25 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 		cost := queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
 		messageCh.Outgoing <- def.Message{Category: def.Cost, Floor: incomingMsg.Floor, Button: incomingMsg.Button, Cost: cost}
 	case def.CompleteOrder:
-		queue.RemoveRequest(incomingMsg.Floor, incomingMsg.Button)
+		queue.RemoveOrder(incomingMsg.Floor, incomingMsg.Button)
 		log.Println(def.ColG, "Order is completed", def.ColN)
 	case def.Cost:
-		log.Println(def.ColC, "Cost reply recieved as event", ColN)
+		log.Println(def.ColC, "Cost reply recieved as event", def.ColN)
 		messageCh.CostReply <- incomingMsg
+	}
+}
+
+func handleBtnPress(btnPress def.ButtonPress, outgoingMsg chan<- def.Message) {
+	if btnPress.Button == def.BtnInside {
+		queue.AddOrder(btnPress.Floor, btnPress.Button, def.LocalElevatorId)
+	} else {
+		outgoingMsg <- def.Message{Category: def.NewOrder, Floor: btnPress.Floor, Button: btnPress.Button, Cost: 0, Addr: def.LocalElevatorId}
 	}
 }
 
 //This is not finished, sanity check this
 func handleDeadElevator(address []string, outgoingMsg chan<- def.Message) {
-	for i = 0; i < len(address); i++ {
-		queue.ReassignAllRequestsFrom(address[i], outgoingMsg)
+	for i := 0; i < len(address); i++ {
+		queue.ReassignAllOrdersFrom(address[i], outgoingMsg)
 	}
 }

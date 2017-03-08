@@ -2,6 +2,8 @@ package queue
 
 import def "definitions"
 
+//import "fmt"
+
 func (q *QueueType) hasOrder(floor, btn int) bool {
 	return q.Matrix[floor][btn].Status
 }
@@ -22,7 +24,7 @@ func (q *QueueType) hasOrderAbove(floor int) bool {
 }
 
 func (q *QueueType) hasOrderBelow(floor int) bool {
-	for i := floor - 1; i <= 0; i-- {
+	for i := floor - 1; i >= 0; i-- {
 		for j := 0; j < def.NumButtons; j++ {
 			if q.hasLocalOrder(i, j) {
 				return true
@@ -32,15 +34,15 @@ func (q *QueueType) hasOrderBelow(floor int) bool {
 	return false
 }
 
-func ShouldStop(floor, dir int) bool{
-	switch dir{
+func ShouldStop(floor, dir int) bool {
+	switch dir {
 	case def.DirDown:
 		return queue.hasLocalOrder(floor, def.BtnDown) ||
 			queue.hasLocalOrder(floor, def.BtnInside) ||
 			!queue.hasOrderBelow(floor)
 	case def.DirUp:
 		return queue.hasLocalOrder(floor, def.BtnUp) ||
- 			queue.hasLocalOrder(floor, def.BtnCab) ||
+			queue.hasLocalOrder(floor, def.BtnInside) ||
 			!queue.hasOrderAbove(floor)
 	}
 	return false
@@ -61,5 +63,7 @@ func ChooseDirection(floor, dir int) int {
 			return def.DirUp
 		}
 	}
+
 	return def.DirIdle
+
 }

@@ -2,6 +2,7 @@ package queue
 
 import (
 	def "definitions"
+	"fmt"
 	"log"
 	"time"
 )
@@ -11,24 +12,21 @@ type reply struct {
 	elevator string
 }
 type order struct {
-	floor int
-	btn   int
-	timer *time.Timer
+	floor  int
+	button int
+	timer  *time.Timer
 }
 
-func CollectCosts(costReply <-chan def.Message, numOnlineCh <-chan int) {
+func CollectCosts(costReply <-chan def.Message) {
 	orderMap := make(map[order][]reply)
 	var timeout = make(chan *order)
-	var numOnline = 1
 	for {
 		select {
 		case message := <-costReply:
-			handleCostReply(orderMap, message, numOnline, timeout)
-		case numOnlineUpdate := <-numOnlineCh:
-			numOnline = numOnineUpdate
+			handleCostReply(orderMap, message, def.OnlineElevators, timeout)
 		case <-timeout:
-			//log her kanskje
-			chooseBestElevator(orderMap, numOnline, true)
+			log.Println(def.ColR, "Not all costs received in time!", def.ColN)
+			chooseBestElevator(orderMap, def.OnlineElevators, true)
 		}
 	}
 }
@@ -36,7 +34,6 @@ func CollectCosts(costReply <-chan def.Message, numOnlineCh <-chan int) {
 func handleCostReply(orderMap map[order][]reply, message def.Message, numOnline int, timeout chan *order) {
 	newOrder := order{floor: message.Floor, button: message.Button}
 	newReply := reply{cost: message.Cost, elevator: message.Addr}
-	//logg?
 
 	for existingOrder := range orderMap {
 		if equal(existingOrder, newOrder) {
@@ -52,11 +49,11 @@ func handleCostReply(orderMap map[order][]reply, message def.Message, numOnline 
 		}
 		if found == false {
 			orderMap[newOrder] = append(orderMap[newOrder], newReply)
-			newOrder.timer.Reset(def.CostReplyTimeOutDuration)
+			newOrder.timer.Reset(def.CostReplyTimeoutDuration)
 		}
 	} else {
 		newOrder.timer = time.NewTimer(def.CostReplyTimeoutDuration)
-		orderMap[newOrder] = []reply{newOrder}
+		orderMap[newOrder] = []reply{newReply}
 		go costTimer(&newOrder, timeout)
 	}
 	chooseBestElevator(orderMap, numOnline, false)
@@ -66,20 +63,22 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 	var bestElevator string
 
 	for order, replyList := range orderMap {
+		fmt.Println("replylist:", replyList)
 		if len(replyList) == numOnline || isTimeout {
 			lowestCost := 9001
 			for _, reply := range replyList {
 				if reply.cost < lowestCost {
-					lowestCost   = reply.cost
+					lowestCost = reply.cost
 					bestElevator = reply.elevator
-				} else if reply.cost == lowestCost {
+				} else if reply.cost == lowestCost {
 					//choose elevator with lowest IP on equal cost
 					if reply.elevator < bestElevator {
 						bestElevator = reply.elevator
 					}
 				}
 			}
-			queue.AddOrder(order.floor, order.button, bestElevator)
+			fmt.Println("Best elevator is:\t", bestElevator)
+			AddOrder(order.floor, order.button, bestElevator)
 			order.timer.Stop()
 			delete(orderMap, order)
 		}

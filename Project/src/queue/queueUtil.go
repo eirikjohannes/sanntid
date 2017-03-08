@@ -2,34 +2,35 @@ package queue
 
 import (
 	def "definitions"
-	"log"
+	//"log"
+	"fmt"
 	"time"
 )
 
 type OrderInfo struct {
-
-	Status  bool
-	Addr    string
-	Timer   *time.Timer
+	Status bool
+	Addr   string
+	Timer  *time.Timer
 }
 
 type QueueType struct {
-	Matrix[def.Numfloors][def.NumButtons]OrderInfo
+	Matrix [def.NumFloors][def.NumButtons]OrderInfo
 }
 
 var queue QueueType
-var takeBackup       = make(chan bool, 10)
-var NewOrder         = make(chan bool, 10)
-var OrderTimeoutChan = make(chan def.BtnPress, 10)
-var LightUpdate      = make(chan def.LightUpdate, 10)
+var takeBackup = make(chan bool, 10)
+var NewOrder = make(chan bool, 10)
+var OrderTimeoutChan = make(chan def.ButtonPress, 10)
+var LightUpdate = make(chan def.LightUpdate, 10)
 
 func AddOrder(floor, btn int, addr string) {
-	if queue.hasOrder(floor,btn) == false {
+	if queue.hasOrder(floor, btn) == false {
 		queue.setOrder(floor, btn, OrderInfo{true, addr, nil})
-		if addr == def.LocalIP {
+		if addr == def.LocalElevatorId {
 			NewOrder <- true
-		}else{
-			go queue.startTimer(floor,btn)
+			fmt.Println("This is the bestest elevator, neworder=====True")
+		} else {
+			go queue.startTimer(floor, btn)
 		}
 	}
 }
@@ -39,14 +40,13 @@ func RemoveOrder(floor, btn int) {
 	queue.stopTimer(floor, btn)
 }
 
-
-func OrderCompleted(floor int, outgoingMsgCh chan<- def.message) {
+func OrderCompleted(floor int, outgoingMsgCh chan<- def.Message) {
 	for btn := 0; btn < def.NumButtons; btn++ {
-		if queue.Matrix[floor][btn].Addr == def.LocalIP {
+		if queue.Matrix[floor][btn].Addr == def.LocalElevatorId {
 			if btn == def.BtnInside {
 				RemoveOrder(floor, btn)
-			}else{
-				outgoingMsgCh <- def.Message{def.CompleteOrder, floor, btn}
+			} else {
+				outgoingMsgCh <- def.Message{Category: def.CompleteOrder, Floor: floor, Button: btn}
 			}
 		}
 	}
@@ -55,7 +55,7 @@ func OrderCompleted(floor int, outgoingMsgCh chan<- def.message) {
 func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message) {
 	RemoveOrder(floor, btn)
 	//log jepp jepp
-	outgoingMsg <- def.Message{def.NewOrder, floor, btn}
+	outgoingMsg <- def.Message{Category: def.NewOrder, Floor: floor, Button: btn}
 }
 
 func ReassignOrdersFromDeadElevator(addr string, outgoingMsgCh chan<- def.Message) {
@@ -80,7 +80,7 @@ func (q *QueueType) startTimer(floor, btn int) {
 	q.Matrix[floor][btn].Timer = time.NewTimer(def.ElevatorOrderTimeoutDuration)
 	<-q.Matrix[floor][btn].Timer.C
 	if q.Matrix[floor][btn].Status {
-		OrderTimeoutChan <- def.BtnPress{floor, btn}
+		OrderTimeoutChan <- def.ButtonPress{floor, btn}
 
 	}
 }

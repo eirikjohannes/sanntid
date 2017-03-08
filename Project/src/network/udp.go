@@ -22,13 +22,12 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, Elevato
 	}
 
 	def.LocalElevatorId = localIP //fmt.Sprintf(localIP) //fmt.Sprintf("%s-%d", localIP, os.Getpid())
-
+	def.OnlineElevators = 1
 	//Initialize peerServer that handles alive and lost elevators
 
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(def.UDPPort, def.LocalElevatorId, peerTxEnable)
 	go peers.Reciever(def.UDPPort, ElevatorPeerUpdateCh)
-
 	//Initialize transmit and recieve servers for UDP messages
 	msgRx := make(chan def.Message)
 	msgTx := make(chan def.Message)
@@ -44,6 +43,7 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, Elevato
 func forwardIncoming(incomingMsg chan<- def.Message, msgRx <-chan def.Message) {
 	for {
 		msg := <-msgRx
+		fmt.Println("Incoming message: ", msg)
 		incomingMsg <- msg
 	}
 }
@@ -51,6 +51,8 @@ func forwardIncoming(incomingMsg chan<- def.Message, msgRx <-chan def.Message) {
 func forwardOutgoing(outgoingMsg <-chan def.Message, msgTx chan<- def.Message) {
 	for {
 		msg := <-outgoingMsg
+		fmt.Println("Outgoing message: ", msg)
+
 		msgTx <- msg
 	}
 }

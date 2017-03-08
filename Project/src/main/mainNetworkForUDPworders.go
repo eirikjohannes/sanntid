@@ -1,7 +1,6 @@
 package main
 
 import (
-	"assigner"
 	def "definitions"
 	"fmt"
 	"fsm"
@@ -11,7 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"queue"
-	"time"
+	//"time"
 )
 
 func main() {
@@ -26,20 +25,18 @@ func main() {
 		ElevatorPeerUpdate: make(chan def.PeerUpdate, 2),
 	}
 	hardwareCh := def.HardwareChan{
-		MotorDir:       make(chan int),
+		MotorDir:       make(chan int, 2),
 		FloorLamp:      make(chan int, 2),
-		DoorLamp:       make(chan bool),
+		DoorLamp:       make(chan bool, 2),
 		BtnPressed:     make(chan def.ButtonPress, 10),
-		DoorTimerReset: make(chan bool),
+		DoorTimerReset: make(chan bool, 2),
 	}
 	currentFloor := hardware.Init()
-	time.Sleep(time.Millisecond * 500)
 	go fsm.Init(eventCh, hardwareCh, currentFloor)
 	go network.InitUDP(messageCh.Incoming, messageCh.Outgoing, eventCh.ElevatorPeerUpdate)
 	go queue.RunBackup(messageCh.Outgoing)
 	go EventHandler(eventCh, messageCh, hardwareCh)
-	time.Sleep(time.Millisecond * 500)
-	go assigner.CollectCosts(messageCh.CostReply)
+	go queue.CollectCosts(messageCh.CostReply)
 
 	go safeKill()
 	fmt.Println("Started main")

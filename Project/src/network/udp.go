@@ -5,10 +5,7 @@ import (
 	"network/bcast"
 	"network/localip"
 	"network/peers"
-	//"flag"
 	"fmt"
-	//"os"
-	//"time"
 	"log"
 )
 
@@ -28,10 +25,11 @@ func InitUDP(incomingMsg chan def.Message, outgoingMsg chan def.Message, Elevato
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(def.UDPPort, def.LocalElevatorId, peerTxEnable)
 	go peers.Reciever(def.UDPPort, ElevatorPeerUpdateCh)
+
 	//Initialize transmit and recieve servers for UDP messages
 	msgRx := make(chan def.Message)
 	msgTx := make(chan def.Message)
-	go bcast.Ostepop(def.UDPPort, msgRx) //WHyTHE FUCK wont it find .Reciever
+	go bcast.Reciever(def.UDPPort, msgRx) //WHyTHE FUCK wont it find .Reciever
 	go bcast.Transmitter(def.UDPPort, msgTx)
 
 	go forwardIncoming(incomingMsg, msgRx)
@@ -58,7 +56,6 @@ func forwardOutgoing(outgoingMsg <-chan def.Message, msgRx chan def.Message, msg
 	for {
 		msg := <-outgoingMsg
 		if def.OnlineElevators == 0 {
-			//This elevator is not connected to a network. Workaround:
 			msgRx <- msg
 		} else {
 			msgTx <- msg

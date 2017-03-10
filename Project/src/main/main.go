@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"queue"
-	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,7 +37,7 @@ func main() {
 	}
 
 	//An infinite loop that is only exited once the file has
-	//not been written to for the last aliveTimeout interval.
+	//not been written to for the last ElevatorResetTimeout. Once there has been no new orders for reset interval or no completion of orders.
 	for true {
 		fmt.Println("Looking for new entries in file...")
 		fileStatus, err := os.Stat(storageFile)
@@ -56,7 +55,7 @@ func main() {
 
 	cmd := exec.Command("gnome-terminal", "-x", "go", "run", filepath1)
 	cmd.Start()
-
+	log.Println(def.ColG, "****A new elevator spawns****",def.ColN)
 	elevmain()
 	
 }

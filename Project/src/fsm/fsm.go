@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-//Defining elevator behaviour
 const (
 	idle int = iota
 	moving

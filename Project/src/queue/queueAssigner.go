@@ -30,6 +30,42 @@ func CollectCosts(costReply <-chan def.Message) {
 	}
 }
 
+func CalculateCost(currentDir, currentFloor, prevFloor, targetFloor, targetButton int) int{
+	totalCost := 0
+	dir       := currentDir
+	targetDir := targetFloor-prevFloor
+
+
+	if currentFloor == -1 {
+		totalCost++
+	} else if dir != def.DirIdle {
+		totalCost += 2
+	}
+	if dir != def.DirIdle {
+		if targetDir != dir {
+			totalCost += 10
+		}
+	}
+
+	if targetDir > 0 && dir == def.DirUp || dir == def.DirIdle {
+		for floor := prevFloor; floor < targetFloor || floor == def.NumFloors; floor++ {
+			if queue.hasLocalOrder(floor, targetButton) || queue.hasLocalOrder(floor, def.BtnInside) {
+				totalCost++
+			}
+			totalCost++
+		}
+	}
+	if targetDir < 0 && dir == def.DirDown || dir == def.DirIdle {
+		for floor := prevFloor; floor > targetFloor || floor == 0; floor-- {
+			if queue.hasLocalOrder(floor, targetButton) || queue.hasLocalOrder(floor, def.BtnInside) {
+				totalCost++
+			}
+			totalCost++
+		}
+	}
+	return totalCost
+}
+
 func handleCostReply(orderMap map[order][]reply, message def.Message, numOnline int, timeout chan *order) {
 	newOrder := order{floor: message.Floor, button: message.Button}
 	newReply := reply{cost: message.Cost, elevator: message.Addr}

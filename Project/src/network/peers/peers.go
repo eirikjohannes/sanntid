@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-//PeerUpdate struct was here. Moved to definitions
-
 var P def.PeerUpdate
 
 const interval = def.AliveMessageInterval

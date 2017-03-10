@@ -26,7 +26,7 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 			log.Println(def.ColW, "Light update", def.ColN)
 			hardware.SetBtnLamp(btnLightUpdate)
 		case orderTimeout := <-queue.OrderTimeoutChan:
-			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing /*, def.LocalElevatorId*/)
+			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
 		case motorDir := <-hardwareCh.MotorDir:
 			hardware.SetMotorDir(motorDir)
 		case floorLamp := <-hardwareCh.FloorLamp:
@@ -108,7 +108,7 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 		cost := queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
 		messageCh.Outgoing <- def.Message{Category: def.Cost, Floor: incomingMsg.Floor, Button: incomingMsg.Button, Cost: cost, Addr: def.LocalElevatorId}
 	case def.CompleteOrder:
-		queue.RemoveOrder(incomingMsg.Floor, incomingMsg.Button /*, incomingMsg.Addr*/)
+		queue.RemoveOrder(incomingMsg.Floor, incomingMsg.Button)
 		log.Println(def.ColG, "Order is completed", def.ColN)
 	case def.Cost:
 		log.Println(def.ColC, "Cost reply recieved as event", def.ColN)

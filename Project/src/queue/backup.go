@@ -15,9 +15,9 @@ import (
 // there is anything on the takeBackup channel
 func RunBackup(outgoingMsg chan<- def.Message) {
 
-	const filename = "elevatorBackup.dat"
+	
 	var backup QueueType
-	backup.loadFromDisk(filename)
+	backup.loadFromDisk(def.BackupFilename)
 	printQueue()
 
 	// Read last time backup was modified

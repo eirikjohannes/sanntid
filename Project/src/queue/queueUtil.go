@@ -35,10 +35,6 @@ func AddOrder(floor, btn int, addr string) {
 }
 
 func RemoveOrder(floor, btn int /*,addr string*/) {
-	/*if queue.Matrix[floor][btn].Addr == addr {
-		queue.setOrder(floor, btn, OrderInfo{false, "", nil})
-		queue.stopTimer(floor, btn)
-	}*/
 	queue.setOrder(floor, btn, OrderInfo{false, "", nil})
 	queue.stopTimer(floor, btn)
 }

@@ -81,7 +81,7 @@ func OnDoorTimeout(hardwareCh def.HardwareChan) {
 	}
 }
 
-//Private
+
 func doorTimer(reset <-chan bool, timeout chan<- bool) {
 	timer := time.NewTimer(0)
 	timer.Stop()

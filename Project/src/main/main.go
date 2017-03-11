@@ -10,11 +10,9 @@ import (
 	"os/signal"
 	"queue"
 	"fmt"
-//	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-//	"strconv"
 	"time"
 )
 
@@ -50,7 +48,7 @@ func main() {
 		}
 		time.Sleep(def.ElevatorOrderTimeoutDuration)
 	}
-
+    
 	fmt.Println("____________Starts the main process_______")
 
 	cmd := exec.Command("gnome-terminal", "-x", "go", "run", filepath1)

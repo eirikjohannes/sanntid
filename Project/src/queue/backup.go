@@ -22,7 +22,7 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 	printQueue()
 
 	// Read last time backup was modified
-	fileStat, _ := os.Stat(filename)
+	fileStat, _ := os.Stat(def.BackupFilename)
 
 	// Resend all hall Orders found in backup, and add internal Orders to queue:
 	for floor := 0; floor < def.NumFloors; floor++ {
@@ -41,7 +41,7 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 		for {
 			<-takeBackup
 			log.Println(def.ColG, "Take Backup", def.ColN)
-			queue.saveToDisk(filename)
+			queue.saveToDisk(def.BackupFilename)
 		}
 	}()
 }

@@ -10,12 +10,11 @@ import (
 	"os/signal"
 	"queue"
 	"fmt"
-	"io/ioutil"
-	"os"
+//	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
+//	"strconv"
 	"time"
 )
 
@@ -27,14 +26,15 @@ func main() {
 
 	_, filepath1, _, _ := runtime.Caller(0)
 	currentDirectory, _ := filepath.Split(filepath1)
-	storageFile := currentDirectory + "/elevatorbackup.dat"
+	storageFile := currentDirectory + "elevatorbackup.dat"
 	
 	fmt.Println("''''___Starting a new process____''''''")
-	backup, err := os.Open(storageFile)
+	tempFile, err := os.Open(storageFile)
 	if err != nil {
 		tempFile, _ := os.Create(storageFile)
 		tempFile.Close()
 	}
+    tempFile.Close();
 
 	//An infinite loop that is only exited once the file has
 	//not been written to for the last ElevatorResetTimeout. Once there has been no new orders for reset interval or no completion of orders.

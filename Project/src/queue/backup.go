@@ -69,7 +69,7 @@ func printQueue() {
 		s := "* " + strconv.Itoa(f+1) + "  "
 		for b := 0; b < def.NumButtons; b++ {
 			if queue.hasOrder(f, b) && b != def.BtnInside {
-				s += "( " + queue.Matrix[f][b].Addr[12:15] + " ) "
+				s += "( " + queue.Matrix[f][b].Addr[12:] + " ) "
 			} else if queue.hasOrder(f, b) {
 				s += "(  x  ) "
 			} else {

@@ -2,7 +2,6 @@ package main
 
 import (
 	def "definitions"
-
 	"fsm"
 	"hardware"
 	"log"
@@ -54,7 +53,7 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 			if len(elevatorPeerUpdate.Lost) != 0 {
 				handleDeadElevator(elevatorPeerUpdate.Lost, messageCh.Outgoing)
 			}
-		}
+		} //end select
 		time.Sleep(10 * time.Millisecond)
 	}
 }

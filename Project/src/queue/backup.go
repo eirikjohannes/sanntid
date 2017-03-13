@@ -14,9 +14,7 @@ import (
 // RunBackup loads backup on startup, and saves queue whenever
 // there is anything on the takeBackup channel. 
 //There is activity on the Takebackup channel every time a new order is placed or excecuted/removed
-func RunBackup(outgoingMsg chan<- def.Message) {
-
-	
+func RunBackup(outgoingMsg chan<- def.Message) {	
 	var backup QueueType
 	backup.loadFromDisk(def.BackupFilename)
 	printQueue()

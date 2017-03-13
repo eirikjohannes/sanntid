@@ -5,10 +5,10 @@ import "time"
 const BackupFilename="elevatorBackup.dat"
 const NumFloors = 4
 const NumButtons = 3
+const UDPPort = 13131
 const ElevatorDoorTimeoutDuration = 2 * time.Second
 const ElevatorTimeoutDuration = 500 * time.Millisecond
 const AliveMessageInterval = 50 * time.Millisecond
-const UDPPort = 13131
 const ElevatorOrderTimeoutDuration = 1 * time.Second
 const CostReplyTimeoutDuration = 500 * time.Millisecond
 const ElevatorResetTimeout = 5 * time.Second
@@ -32,7 +32,7 @@ type Message struct {
 	Addr     string
 }
 
-const ( //Category for messages
+const ( //"Category" for messages struct
 	Alive int = iota + 1
 	NewOrder
 	CompleteOrder

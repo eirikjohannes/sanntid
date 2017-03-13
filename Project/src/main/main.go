@@ -9,54 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"queue"
-	"fmt"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"time"
 )
-
-
-func main() {
-
-	/*queue kjører backup hver gang det kommer en ny ordre, OG hver gang en ordre fjernes fra køen.
-	Dersom heisen blir stående uten ordre vil den time ut og restarte, dette burde ikke være noe problem.*/
-
-	_, filepath1, _, _ := runtime.Caller(0)
-	currentDirectory, _ := filepath.Split(filepath1)
-	storageFile := currentDirectory + "elevatorbackup.dat"
-	
-	fmt.Println("''''___Starting a new process____''''''")
-	tempFile, err := os.Open(storageFile)
-	if err != nil {
-		tempFile, _ := os.Create(storageFile)
-		tempFile.Close()
-	}
-    tempFile.Close();
-
-	//An infinite loop that is only exited once the file has
-	//not been written to for the last ElevatorResetTimeout. Once there has been no new orders for reset interval or no completion of orders.
-	for true {
-		fmt.Println("Looking for new entries in file...")
-		fileStatus, err := os.Stat(storageFile)
-		if err != nil {
-			fmt.Println("Unrecoverable error...", err.Error())
-			os.Exit(0)
-		}
-		if time.Now().After(fileStatus.ModTime().Add(def.ElevatorResetTimeout)) {
-			break
-		}
-		time.Sleep(def.ElevatorOrderTimeoutDuration)
-	}
-    
-	fmt.Println("____________Starts the main process_______")
-
-	cmd := exec.Command("gnome-terminal", "-x", "go", "run", filepath1)
-	cmd.Start()
-	log.Println(def.ColG, "****A new elevator spawns****",def.ColN)
-	elevmain()
-	
-}
 
 func elevmain() {
 	messageCh := def.MessageChan{

@@ -110,7 +110,6 @@ func chooseBestElevator(orderMap map[order][]reply, numOnline int, isTimeout boo
 					lowestCost = reply.cost
 					bestElevator = reply.elevator
 				} else if reply.cost == lowestCost {
-					//choose elevator with lowest IP on equal cost
 					if reply.elevator < bestElevator {
 						bestElevator = reply.elevator
 					}

@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"time"
+	//"time"
 )
 
 // RunBackup loads backup on startup, and saves queue whenever
@@ -20,10 +20,10 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 	backup.loadFromDisk(def.BackupFilename)
 
 	// Read last time backup was modified
-	fileStat, _ := os.Stat(def.BackupFilename)
+	//fileStat, _ := os.Stat(def.BackupFilename)
 
 	// Resend all hall Orders found in backup, and add internal Orders to queue:
-	for floor := 0; floor < def.NumFloors; floor++ {
+	/*for floor := 0; floor < def.NumFloors; floor++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
 			if backup.hasOrder(floor, btn) {
 				log.Println(def.ColR, "Tried to redistribute order", def.ColN)
@@ -35,7 +35,7 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 				}
 			}
 		}
-	}
+	}*/
 
 	go func() {
 		for {

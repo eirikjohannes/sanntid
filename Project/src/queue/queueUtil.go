@@ -2,6 +2,7 @@ package queue
 
 import (
 	def "definitions"
+	"log"
 	"time"
 )
 
@@ -16,13 +17,15 @@ type QueueType struct {
 }
 
 var queue QueueType
-var takeBackup = make(chan bool, 10)
+var takeBackup = make(chan bool, 20)
 var NewOrder = make(chan bool, 10)
 var OrderTimeoutChan = make(chan def.ButtonPress, 10)
 var LightUpdate = make(chan def.LightUpdate, 10)
 
 func AddOrder(floor, btn int, addr string) {
+	log.Println(def.ColR, "Addorder:"+addr, def.ColN)
 	if queue.hasOrder(floor, btn) == false {
+		log.Println("hasOrder===FAlse")
 		queue.setOrder(floor, btn, OrderInfo{true, addr, nil})
 		if addr == def.LocalElevatorId {
 			NewOrder <- true
@@ -41,7 +44,7 @@ func OrderCompleted(floor, dir int, outgoingMsgCh chan<- def.Message) {
 	for btn := 0; btn < def.NumButtons; btn++ {
 		if queue.Matrix[floor][btn].Addr == def.LocalElevatorId {
 			if btn == def.BtnInside {
-				RemoveOrder(floor, btn) 
+				RemoveOrder(floor, btn)
 			} else {
 				outgoingMsgCh <- def.Message{Category: def.CompleteOrder, Floor: floor, Button: btn, Addr: def.LocalElevatorId}
 			}
@@ -49,7 +52,7 @@ func OrderCompleted(floor, dir int, outgoingMsgCh chan<- def.Message) {
 	}
 }
 
-func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message ) {
+func ReassignOrder(floor, btn int, outgoingMsg chan<- def.Message) {
 	RemoveOrder(floor, btn)
 	outgoingMsg <- def.Message{Category: def.NewOrder, Floor: floor, Button: btn}
 }
@@ -58,7 +61,7 @@ func ReassignOrdersFromDeadElevator(addr string, outgoingMsgCh chan<- def.Messag
 	for floor := 0; floor < def.NumFloors; floor++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
 			if queue.Matrix[floor][btn].Addr == addr {
-				ReassignOrder(floor, btn, outgoingMsgCh )
+				ReassignOrder(floor, btn, outgoingMsgCh)
 			}
 		}
 	}
@@ -68,7 +71,7 @@ func (q *QueueType) setOrder(floor, btn int, order OrderInfo) {
 	q.Matrix[floor][btn] = order
 	LightUpdate <- def.LightUpdate{Floor: floor, Button: btn, UpdateTo: order.Status}
 	takeBackup <- true
-	printQueue()
+	//printQueue()
 }
 
 func (q *QueueType) startTimer(floor, btn int) {

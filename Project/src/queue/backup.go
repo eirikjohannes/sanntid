@@ -12,14 +12,12 @@ import (
 )
 
 // RunBackup loads backup on startup, and saves queue whenever
-// there is anything on the takeBackup channel. 
+// there is anything on the takeBackup channel.
 //There is activity on the Takebackup channel every time a new order is placed or excecuted/removed
 func RunBackup(outgoingMsg chan<- def.Message) {
 
-	
 	var backup QueueType
 	backup.loadFromDisk(def.BackupFilename)
-	printQueue()
 
 	// Read last time backup was modified
 	fileStat, _ := os.Stat(def.BackupFilename)
@@ -28,15 +26,17 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 	for floor := 0; floor < def.NumFloors; floor++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
 			if backup.hasOrder(floor, btn) {
+				log.Println(def.ColR, "Tried to redistribute order", def.ColN)
 				if btn == def.BtnInside {
 					AddOrder(floor, btn, def.LocalElevatorId)
 					// Check if time since last backup is less than OrderTimeoutDuration
-				} else if !time.Now().After(fileStat.ModTime().Add(def.ElevatorOrderTimeoutDuration)) {
+				} else if !time.Now().After(fileStat.ModTime().Add(10 * time.Second)) {
 					AddOrder(floor, btn, def.LocalElevatorId)
 				}
 			}
 		}
 	}
+
 	go func() {
 		for {
 			<-takeBackup
@@ -60,6 +60,7 @@ func (q *QueueType) loadFromDisk(filename string) {
 		data, _ := ioutil.ReadFile(filename)
 		json.Unmarshal(data, q)
 	}
+
 }
 
 func printQueue() {

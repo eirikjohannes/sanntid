@@ -1,4 +1,4 @@
-package queue
+package queue2
 
 import (
 	def "definitions"
@@ -25,7 +25,6 @@ var LightUpdate = make(chan def.LightUpdate, 10)
 func AddOrder(floor, btn int, addr string) {
 	log.Println(def.ColR, "Addorder:"+addr, def.ColN)
 	if queue.hasOrder(floor, btn) == false {
-		log.Println("hasOrder===FAlse")
 		queue.setOrder(floor, btn, OrderInfo{true, addr, nil})
 		if addr == def.LocalElevatorId {
 			NewOrder <- true
@@ -33,6 +32,7 @@ func AddOrder(floor, btn int, addr string) {
 			go queue.startTimer(floor, btn)
 		}
 	}
+	
 }
 
 func RemoveOrder(floor, btn int) {
@@ -71,11 +71,10 @@ func (q *QueueType) setOrder(floor, btn int, order OrderInfo) {
 	q.Matrix[floor][btn] = order
 	LightUpdate <- def.LightUpdate{Floor: floor, Button: btn, UpdateTo: order.Status}
 	takeBackup <- true
-	//printQueue()
+	q.printQueue()
 }
 
 func (q *QueueType) startTimer(floor, btn int) {
-
 	q.Matrix[floor][btn].Timer = time.NewTimer(def.ElevatorOrderTimeoutDuration)
 	<-q.Matrix[floor][btn].Timer.C
 	if q.Matrix[floor][btn].Status {

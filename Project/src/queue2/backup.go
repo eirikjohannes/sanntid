@@ -1,4 +1,4 @@
-package queue
+package queue2
 
 import (
 	def "definitions"
@@ -18,7 +18,7 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 
 	var backup QueueType
 	backup.loadFromDisk(def.BackupFilename)
-
+	//backup.printQueue();
 	// Read last time backup was modified
 	//fileStat, _ := os.Stat(def.BackupFilename)
 
@@ -28,15 +28,17 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 			if backup.hasOrder(floor, btn) {
 				log.Println(def.ColR, "Tried to redistribute order", def.ColN)
 				if btn == def.BtnInside {
-					AddOrder(floor, btn, def.LocalElevatorId)
+					RemoveOrder(floor,btn)
+					backup.printQueue();
+					AddOrder(floor,btn,def.LocalElevatorId)
 					// Check if time since last backup is less than OrderTimeoutDuration
 				} else if !time.Now().After(fileStat.ModTime().Add(10 * time.Second)) {
-					AddOrder(floor, btn, def.LocalElevatorId)
+					ReassignOrder(floor, btn, outgoingMsg)
 				}
 			}
 		}
-	}*/
-
+	}
+	backup.printQueue()*/
 	go func() {
 		for {
 			<-takeBackup
@@ -44,6 +46,20 @@ func RunBackup(outgoingMsg chan<- def.Message) {
 			queue.saveToDisk(def.BackupFilename)
 		}
 	}()
+/*	go func() {
+		for{
+			for f := def.NumFloors - 1; f >= 0; f-- {
+				for b := 0; b < def.NumButtons; b++ {
+					if queue.hasOrder(f, b) && b != def.BtnInside {
+						AddOrder(f,b,queue.Matrix[f][b].Addr)
+					} else if queue.hasOrder(f, b) {
+
+					} 
+				}
+			}
+			time.Sleep(1*time.Second)
+		}
+	}()*/
 }
 
 // saveToDisk saves a QueueType to disk.
@@ -63,15 +79,15 @@ func (q *QueueType) loadFromDisk(filename string) {
 
 }
 
-func printQueue() {
+func (q *QueueType) printQueue() {
 	fmt.Println(def.ColB, "\n*****************************")
 	fmt.Println("*       Up     Down   Inside   ")
 	for f := def.NumFloors - 1; f >= 0; f-- {
 		s := "* " + strconv.Itoa(f+1) + "  "
 		for b := 0; b < def.NumButtons; b++ {
-			if queue.hasOrder(f, b) && b != def.BtnInside {
-				s += "( " + queue.Matrix[f][b].Addr[12:] + " ) "
-			} else if queue.hasOrder(f, b) {
+			if q.hasOrder(f, b) && b != def.BtnInside {
+				s += "( " + q.Matrix[f][b].Addr[12:] + " ) "
+			} else if q.hasOrder(f, b) {
 				s += "(  x  ) "
 			} else {
 				s += "(     ) "

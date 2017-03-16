@@ -3,7 +3,7 @@ package fsm
 import (
 	def "definitions"
 	"log"
-	"queue"
+	"queue2"
 	"time"
 )
 
@@ -30,18 +30,18 @@ func Init(eventCh def.EventChan, hardwareCh def.HardwareChan, startFloor int) {
 func OnNewOrder(OutgoingMsg chan<- def.Message, hardwareCh def.HardwareChan) {
 	switch Elevator.Behaviour {
 	case doorOpen:
-		if queue.ShouldStop(Elevator.Floor, Elevator.Dir) {
+		if queue2.ShouldStop(Elevator.Floor, Elevator.Dir) {
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
+			queue2.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
 		}
 	case moving:
 		//Do nothing
 	case idle:
-		Elevator.Dir = queue.ChooseDirection(Elevator.Floor, Elevator.Dir)
+		Elevator.Dir = queue2.ChooseDirection(Elevator.Floor, Elevator.Dir)
 		if Elevator.Dir == def.DirIdle {
 			hardwareCh.DoorLamp <- true
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
+			queue2.OrderCompleted(Elevator.Floor, Elevator.Dir, OutgoingMsg)
 			Elevator.Behaviour = doorOpen
 		} else {
 			hardwareCh.MotorDir <- Elevator.Dir
@@ -55,12 +55,12 @@ func OnFloorArrival(hardwareCh def.HardwareChan, OutgoingMsg chan<- def.Message,
 	hardwareCh.FloorLamp <- Elevator.Floor
 	switch Elevator.Behaviour {
 	case moving:
-		if queue.ShouldStop(newFloor, Elevator.Dir) {
+		if queue2.ShouldStop(newFloor, Elevator.Dir) {
 			tempDir := Elevator.Dir
 			hardwareCh.MotorDir <- def.DirIdle
 			hardwareCh.DoorLamp <- true
 			hardwareCh.DoorTimerReset <- true
-			queue.OrderCompleted(Elevator.Floor, tempDir, OutgoingMsg)
+			queue2.OrderCompleted(Elevator.Floor, tempDir, OutgoingMsg)
 			Elevator.Behaviour = doorOpen
 		}
 	}
@@ -69,7 +69,7 @@ func OnFloorArrival(hardwareCh def.HardwareChan, OutgoingMsg chan<- def.Message,
 func OnDoorTimeout(hardwareCh def.HardwareChan) {
 	switch Elevator.Behaviour {
 	case doorOpen:
-		Elevator.Dir = queue.ChooseDirection(Elevator.Floor, Elevator.Dir)
+		Elevator.Dir = queue2.ChooseDirection(Elevator.Floor, Elevator.Dir)
 		hardwareCh.DoorLamp <- false
 		hardwareCh.MotorDir <- Elevator.Dir
 		if Elevator.Dir == def.DirIdle {

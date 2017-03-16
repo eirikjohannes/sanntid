@@ -13,7 +13,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"queue"
+	"queue2"
 	"runtime"
 	"strconv"
 	"time"
@@ -101,9 +101,9 @@ func elevmain() {
 	currentFloor := hardware.Init()
 	go fsm.Init(eventCh, hardwareCh, currentFloor)
 	go network.InitUDP(messageCh.Incoming, messageCh.Outgoing, eventCh.ElevatorPeerUpdate)
-	go queue.RunBackup(messageCh.Outgoing)
+	go queue2.RunBackup(messageCh.Outgoing)
 	go EventHandler(eventCh, messageCh, hardwareCh)
-	go queue.CollectCosts(messageCh.CostReply)
+	go queue2.CollectCosts(messageCh.CostReply)
 
 	go safeKill()
 
@@ -131,25 +131,24 @@ func EventHandler(eventCh def.EventChan, messageCh def.MessageChan, hardwareCh d
 			handleBtnPress(btnPress, messageCh.Outgoing)
 		case incomingMsg := <-messageCh.Incoming:
 			go sortAndHandleMessage(incomingMsg, messageCh)
-		case btnLightUpdate := <-queue.LightUpdate:
+		case btnLightUpdate := <-queue2.LightUpdate:
 			log.Println(def.ColW, "Light update", def.ColN)
 			hardware.SetBtnLamp(btnLightUpdate)
-		case orderTimeout := <-queue.OrderTimeoutChan:
-			queue.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
+		case orderTimeout := <-queue2.OrderTimeoutChan:
+			queue2.ReassignOrder(orderTimeout.Floor, orderTimeout.Button, messageCh.Outgoing)
 		case motorDir := <-hardwareCh.MotorDir:
 			hardware.SetMotorDir(motorDir)
 		case floorLamp := <-hardwareCh.FloorLamp:
 			hardware.SetFloorLamp(floorLamp)
 		case doorLamp := <-hardwareCh.DoorLamp:
 			hardware.SetDoorLamp(doorLamp)
-		case <-queue.NewOrder:
-			log.Println(def.ColW, "Event: New order", def.ColN)
+		case <-queue2.NewOrder:
+			log.Println(def.ColR, "Event: New order", def.ColN)
 			fsm.OnNewOrder(messageCh.Outgoing, hardwareCh)
 		case currFloor := <-eventCh.FloorReached:
 			fsm.OnFloorArrival(hardwareCh, messageCh.Outgoing, currFloor)
 		case <-eventCh.DoorTimeout:
 			fsm.OnDoorTimeout(hardwareCh)
-
 		case elevatorPeerUpdate := <-eventCh.ElevatorPeerUpdate:
 			def.OnlineElevators = elevatorPeerUpdate.NumOnline
 			if def.OnlineElevators == 0 {
@@ -214,10 +213,10 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 	switch incomingMsg.Category {
 	case def.NewOrder:
 		log.Println(def.ColC, "New order incomming!", def.ColN)
-		cost := queue.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
+		cost := queue2.CalculateCost(fsm.Elevator.Dir, hardware.GetFloor(), fsm.Elevator.Floor, incomingMsg.Floor, incomingMsg.Button)
 		messageCh.Outgoing <- def.Message{Category: def.Cost, Floor: incomingMsg.Floor, Button: incomingMsg.Button, Cost: cost, Addr: def.LocalElevatorId}
 	case def.CompleteOrder:
-		queue.RemoveOrder(incomingMsg.Floor, incomingMsg.Button)
+		queue2.RemoveOrder(incomingMsg.Floor, incomingMsg.Button)
 		log.Println(def.ColG, "Order is completed", def.ColN)
 	case def.Cost:
 		log.Println(def.ColC, "Cost reply recieved as event", def.ColN)
@@ -227,7 +226,7 @@ func sortAndHandleMessage(incomingMsg def.Message, messageCh def.MessageChan) {
 
 func handleBtnPress(btnPress def.ButtonPress, outgoingMsg chan<- def.Message) {
 	if btnPress.Button == def.BtnInside {
-		queue.AddOrder(btnPress.Floor, btnPress.Button, def.LocalElevatorId)
+		queue2.AddOrder(btnPress.Floor, btnPress.Button, def.LocalElevatorId)
 	} else {
 		outgoingMsg <- def.Message{Category: def.NewOrder, Floor: btnPress.Floor, Button: btnPress.Button, Cost: 0, Addr: def.LocalElevatorId}
 	}
@@ -235,6 +234,6 @@ func handleBtnPress(btnPress def.ButtonPress, outgoingMsg chan<- def.Message) {
 
 func handleDeadElevator(address []string, outgoingMsg chan<- def.Message) {
 	for i := 0; i < len(address); i++ {
-		queue.ReassignOrdersFromDeadElevator(address[i], outgoingMsg)
+		queue2.ReassignOrdersFromDeadElevator(address[i], outgoingMsg)
 	}
 }
